@@ -1,3 +1,11 @@
+require_relative 'pieces/bishop'
+require_relative 'pieces/knight'
+require_relative 'pieces/pawn'
+require_relative 'pieces/king'
+require_relative 'pieces/queen'
+require_relative 'pieces/rook'
+require_relative 'pieces/piece'
+
 class Board
 
   attr_accessor :chess_board
@@ -14,8 +22,10 @@ class Board
         chess_board[coordinates] = approp_piece(coordinates)
       end
     end
+  end
 
-
+  def keys
+    chess_board.keys
   end
 
   def approp_piece(position)
@@ -77,6 +87,82 @@ class Board
     end
   end
 
+  def print_board
+    all_pieces = chess_board.values
+    value = 8
+    total_count = 0
+    puts "\n"
+    puts "\n"
+    8.times do |i|
+      
+      8.times do |j|
+        top_of_row(j)
+      end
+    
 
+      if i != 9
+        print "\n"
+        print "#{value}"
+        value -= 1
+        8.times do |i|
+          if all_pieces[total_count] != ' '
+            middle_of_row(i, all_pieces[total_count].unicode)
+            total_count += 1
+          else
+            middle_of_row(i, ' ')
+            total_count += 1
+          end
+        end
+        puts "\n"
+      end
+    end
+
+    8.times do |i| 
+      top_of_row(i)
+    end
+
+    puts "\n"
+    letters = [*('A'..'H')]
+
+    letters.each do |letter|
+      if letter == 'A'
+        print "    #{letter}"
+      else
+        print "   #{letter}"
+      end
+    end
+
+    puts "\n"
+    puts "\n"
+
+  end
+
+
+  private 
+
+  #CHECK HERE
+  def top_of_row(i)
+    if i == 0
+      print '  +---'
+      elsif i == 7
+        print '+---+'
+      else
+        print '+---'
+      end
+  end
+
+  #CHECK HERE
+  def middle_of_row(i, type)
+    if i == 0
+      print " | #{type} "
+    elsif i == 7
+      print "| #{type} |"
+    else
+      print "| #{type} "
+    end
+  end
 end
 
+board = Board.new
+p board.chess_board
+board.print_board
