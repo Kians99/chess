@@ -1,10 +1,10 @@
 class Player
 
-  attr_reader :color, :player_number
+  attr_reader :color, :number
 
-  def initialize(color, player_number)
+  def initialize(color, number)
     @color = color
-    @player_number = player_number
+    @number = number
   end
 
   def make_guess
