@@ -16,6 +16,17 @@ describe Piece do
       expect(translation).to eql([8, 8])
     end
 
+    it "returns numerical to algebraic notation" do
+      piece = Piece.new("B", "\u2655")
+      translation = piece.translate_to_algebraic([8,8])
+      expect(translation).to eql('H8')
+    end
+
+    it "returns numerical to algebraic notation" do 
+      piece = Piece.new("B", "\u2655")
+      translation = piece.translate_to_algebraic([2,5])
+      expect(translation).to eql('B5')
+    end
   end
 end
 
