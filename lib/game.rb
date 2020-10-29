@@ -8,8 +8,8 @@ class Game
 
   def initialize
 
-    @player1 = Player.new("W", 1)
-    @player2 = Player.new("B", 2)
+    @player1 = Player.new("W", 1, 1)
+    @player2 = Player.new("B", 2, -1)
     @board = Board.new
 
   end
@@ -24,7 +24,7 @@ class Game
 
   def make_move(player)
     move = player.make_guess
-    proper_move_format?(move) ?  move : (print 'Coordinates entered in invalid format.')
+    proper_move_format?(move) ?  move : (print 'Coordinates entered in invalid format. ')
   end
 
   def proper_move_format?(move)
@@ -36,6 +36,17 @@ class Game
     !(board.chess_board[move[0..1]] == " ")
   end
 
+  def player_piece(desired_move, player)
+    piece = board.chess_board[desired_move[0..1]]
+      if piece != ' '
+        if piece.color != player.color
+          desired_move = nil
+          puts "That is not your piece to move!" 
+        end
+      end
+    desired_move 
+  end
+
   def main_game_loop
 
     current_player = self.player1
@@ -43,13 +54,25 @@ class Game
     #until a checkmate/stalemate occurs
     until false
 
-      move = make_move(player1)
+      inputted_move = make_move(player1)
+      inputted_move != nil ? move = self.player_piece(inputted_move, current_player) : move = nil
+      
 
       if !move.nil?
 
         if piece_at_that_pos?(move)
           puts "PIECE"
-          #piece = board.chess_board[move[0..1]]
+          piece = board.chess_board[move[0..1]] 
+          if piece.valid_move(move[0..1], move[3..-1], current_player) 
+            board.chess_board[move[0..1]] = " "
+            board.chess_board[move[3..-1]] = piece
+            board.print_board
+            current_player.number == 1 ? current_player = self.player2 : current_player = self.player1
+            puts "Great! We moved #{piece.name} to #{move[3..-1]}. It is player #{current_player.number}'s turn."
+            
+          else
+            puts "Not a valid move for #{piece.name}"  
+          end
           #p piece
           #check what kind of piece it is
           #See if the desired move is valid for that piece
@@ -60,10 +83,8 @@ class Game
         
         
       else 
-        puts ' Please try again!'
+        puts 'Please try again!'
       end
-
-      #current_player.number == 1 ? current_player = self.player2 : current_player = self.player1
 
     end
 
