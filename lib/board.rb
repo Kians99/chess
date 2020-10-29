@@ -140,7 +140,6 @@ class Board
 
   private 
 
-  #CHECK HERE
   def top_of_row(i)
     if i == 0
       print '  +---'
@@ -148,10 +147,9 @@ class Board
         print '+---+'
       else
         print '+---'
-      end
+    end
   end
 
-  #CHECK HERE
   def middle_of_row(i, type)
     if i == 0
       print " | #{type} "
@@ -163,6 +161,6 @@ class Board
   end
 end
 
-board = Board.new
-p board.chess_board
-board.print_board
+#board = Board.new
+#p board.chess_board
+#board.print_board
