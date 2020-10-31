@@ -39,12 +39,52 @@ class Game
   def player_piece(desired_move, player)
     piece = board.chess_board[desired_move[0..1]]
       if piece != ' '
-        if piece.color != player.color
+        if players_piece?(piece, player) 
           desired_move = nil
           puts "That is not your piece to move!" 
         end
       end
     desired_move 
+  end
+
+  def players_piece?(piece, player)
+    piece.color != player.color
+  end
+
+  def change_piece_location(start_coord, end_coord, piece)
+    board.chess_board[start_coord] = ' '
+    board.chess_board[end_coord] = piece
+  end
+
+  def change_player(player)
+    player.number == 1 ? self.player2 : self.player1
+  end
+
+  def tell_user_whose_turn(player)
+    player.number == 1 ? ("black") : ("white")
+  end
+
+  def update_user(target_coord, player, piece, move)
+    if target_coord == ' '
+      change_piece_location(move[0..1], move[3..-1], piece)
+      board.print_board
+      print "Great! We moved #{piece.name} to #{move[3..-1]}. "
+      puts "It is #{tell_user_whose_turn(player)}'s turn"
+      change_player(player)
+    elsif players_piece?(target_coord, player)
+      change_piece_location(move[0..1], move[3..-1], piece)
+      board.print_board
+      player.add_captured_piece(target_coord.name)
+      print "Great! We moved #{piece.name} to #{move[3..-1]} capturing #{target_coord.name}. "
+      puts "It is #{tell_user_whose_turn(player)}'s turn"
+      change_player(player)
+    else
+      color = tell_user_whose_turn(player) == "black" ? "white" : "black"
+      puts "\n"
+      puts "\n"
+      puts "There is a #{color} piece already on #{move[3..-1]}. It is still #{color}'s turn."
+      player
+    end
   end
 
   def main_game_loop
@@ -66,21 +106,13 @@ class Game
         #TO MOVE TO THE SAME COORD AS WHERE A PIECE OF THE SAME TYPE ALREADY IS
 
         if piece_at_that_pos?(move)
-          puts "PIECE"
+          
           piece = board.chess_board[move[0..1]] 
-          if piece.valid_move(move[0..1], move[3..-1], current_player) #input board
-            board.chess_board[move[0..1]] = " "
-            board.chess_board[move[3..-1]] = piece
-            board.print_board
-            current_player.number == 1 ? current_player = self.player2 : current_player = self.player1
-            print "Great! We moved #{piece.name} to #{move[3..-1]}. "
-            if current_player.number == 1
-              puts "It is white's turn."
-            else
-              puts "It is black's turn."
-            end
-
+          if piece.valid_move(move[0..1], move[3..-1], current_player)
             
+            target_coord = board.chess_board[move[3..-1]]
+            
+            current_player = update_user(target_coord, current_player, piece, move)
           else
             puts "Not a valid move for #{piece.name}"  
           end
