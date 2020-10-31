@@ -33,7 +33,7 @@ class Game
   end
 
   def piece_at_that_pos?(move)
-    !(board.chess_board[move[0..1]] == " ")
+    board.chess_board[move[0..1]] != ' '
   end
 
   def player_piece(desired_move, player)
@@ -60,15 +60,26 @@ class Game
 
       if !move.nil?
 
+        #USE KNIGHT AS MODEL FOR OTHER PIECES
+        #MAKE SURE ALL PIECES ARE UNABLE TO MOVE PAST ANOTHER PIECE (EXCEPT FOR KNIGHT)
+        #ALSO MAKE SURE PIECE CAN ONLY TAKE PIECES OF THE OTHER KIND AND SHOULD NOT BE ABLE
+        #TO MOVE TO THE SAME COORD AS WHERE A PIECE OF THE SAME TYPE ALREADY IS
+
         if piece_at_that_pos?(move)
           puts "PIECE"
           piece = board.chess_board[move[0..1]] 
-          if piece.valid_move(move[0..1], move[3..-1], current_player) 
+          if piece.valid_move(move[0..1], move[3..-1], current_player) #input board
             board.chess_board[move[0..1]] = " "
             board.chess_board[move[3..-1]] = piece
             board.print_board
             current_player.number == 1 ? current_player = self.player2 : current_player = self.player1
-            puts "Great! We moved #{piece.name} to #{move[3..-1]}. It is player #{current_player.number}'s turn."
+            print "Great! We moved #{piece.name} to #{move[3..-1]}. "
+            if current_player.number == 1
+              puts "It is white's turn."
+            else
+              puts "It is black's turn."
+            end
+
             
           else
             puts "Not a valid move for #{piece.name}"  
