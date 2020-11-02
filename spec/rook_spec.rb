@@ -1,4 +1,4 @@
-require './lib/pieces/knight'
+require './lib/pieces/rook'
 
 describe Rook do 
   describe '#pos_vertical_moves' do
