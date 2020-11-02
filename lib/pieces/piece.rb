@@ -76,6 +76,28 @@ class Piece
     pos_moves
   end
 
+  def pos_diagonal_moves(start_coord, board, direction = [[1,1], [1,-1], [-1, 1], [-1,-1]])
+
+    all_pos_moves = []
+
+    direction.each do |direc|
+      local_pos_moves = []
+      7.times do |i|
+        new_coord = []
+        new_coord[1] = start_coord[1] + ((i + 1) * direc[0])
+        new_coord[0] = start_coord[0] + ((i + 1) * direc[1])
+        if valid_coord?(new_coord[0], new_coord[1]) 
+          local_pos_moves.push(new_coord)
+          break if piece_in_the_way?(new_coord, board)
+        else 
+          break
+        end
+      end
+      all_pos_moves += local_pos_moves
+    end
+    all_pos_moves
+  end
+
   #Add funtion that cleans the possible inputs
   #add function that checks to see what kind of piece
   #is already at the avaible inputs
