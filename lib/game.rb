@@ -81,7 +81,7 @@ class Game
       board.print_board
       player.add_captured_piece(target_coord.name)
       approp_color = number_to_color(player)
-      print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]} capturing a #{tell_user_whose_turn(player)} #{target_coord.name}. "
+      print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s #{target_coord.name}. "
       puts "It is now #{tell_user_whose_turn(player)}'s turn"
       change_player(player)
     else
