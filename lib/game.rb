@@ -64,19 +64,25 @@ class Game
     player.number == 1 ? ("black") : ("white")
   end
 
+  def number_to_color(player)
+    player.number == 1 ? ("white") : ("black")
+  end
+
   def update_user(target_coord, player, piece, move)
     if target_coord == ' '
       change_piece_location(move[0..1], move[3..-1], piece)
       board.print_board
-      print "Great! We moved #{piece.name} to #{move[3..-1]}. "
+      approp_color = number_to_color(player)
+      print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]}. "
       puts "It is #{tell_user_whose_turn(player)}'s turn"
       change_player(player)
     elsif players_piece?(target_coord, player)
       change_piece_location(move[0..1], move[3..-1], piece)
       board.print_board
       player.add_captured_piece(target_coord.name)
-      print "Great! We moved #{piece.name} to #{move[3..-1]} capturing #{target_coord.name}. "
-      puts "It is #{tell_user_whose_turn(player)}'s turn"
+      approp_color = number_to_color(player)
+      print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]} capturing a #{tell_user_whose_turn(player)} #{target_coord.name}. "
+      puts "It is now #{tell_user_whose_turn(player)}'s turn"
       change_player(player)
     else
       color = tell_user_whose_turn(player) == "black" ? "white" : "black"
@@ -108,7 +114,7 @@ class Game
         if piece_at_that_pos?(move)
           
           piece = board.chess_board[move[0..1]] 
-          if piece.valid_move(move[0..1], move[3..-1], current_player)
+          if piece.valid_move(move[0..1], move[3..-1], board, current_player)
             
             target_coord = board.chess_board[move[3..-1]]
             
