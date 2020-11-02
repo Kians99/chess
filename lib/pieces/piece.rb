@@ -34,6 +34,48 @@ class Piece
     x_val.between?(1, 8) && y_val.between?(1, 8)
   end
 
+  def piece_in_the_way?(coord, board)
+
+    translate = Piece.translate_to_algebraic(coord)
+    board.chess_board[translate] != ' '
+  end
+
+  def pos_vertical_moves(start_coord, board, direction)
+
+    pos_moves = []
+
+    7.times do |i|
+      new_coord = []
+      new_coord[0] = start_coord[0]
+      new_coord[1] = start_coord[1] + ((i + 1) * direction)
+      if valid_coord?(new_coord[0], new_coord[1]) 
+        pos_moves.push(new_coord)
+        return pos_moves if piece_in_the_way?(new_coord, board)
+      else 
+        return pos_moves
+      end
+    end
+    pos_moves
+  end
+
+  def pos_horizontal_moves(start_coord, board, direction)
+
+    pos_moves = []
+
+    7.times do |i|
+      new_coord = []
+      new_coord[1] = start_coord[1]
+      new_coord[0] = start_coord[0] + ((i + 1) * direction)
+      if valid_coord?(new_coord[0], new_coord[1]) 
+        pos_moves.push(new_coord)
+        return pos_moves if piece_in_the_way?(new_coord, board)
+      else 
+        return pos_moves
+      end
+    end
+    pos_moves
+  end
+
   #Add funtion that cleans the possible inputs
   #add function that checks to see what kind of piece
   #is already at the avaible inputs
