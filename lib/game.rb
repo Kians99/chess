@@ -41,7 +41,7 @@ class Game
       if piece != ' '
         if players_piece?(piece, player) 
           desired_move = nil
-          puts "That is not your piece to move!" 
+          puts "That is not your piece to move." 
         end
       end
     desired_move 
@@ -77,6 +77,12 @@ class Game
       puts "It is #{tell_user_whose_turn(player)}'s turn"
       change_player(player)
     elsif players_piece?(target_coord, player)
+
+      if piece.name == 'pawn'
+        color = tell_user_whose_turn(player) == "black" ? "white" : "black"
+        puts "The pawn must capture diagonally—it cannot move to #{move[3..-1]}. It is still #{color}'s turn."
+        return player
+      end
       change_piece_location(move[0..1], move[3..-1], piece)
       board.print_board
       player.add_captured_piece(target_coord.name)
@@ -94,49 +100,28 @@ class Game
   end
 
   def main_game_loop
-
     current_player = self.player1
     puts 'White moves first. Please enter your move:'
     #until a checkmate/stalemate occurs
     until false
-
       inputted_move = make_move(player1)
-      inputted_move != nil ? move = self.player_piece(inputted_move, current_player) : move = nil
-      
-
+      move = (!inputted_move.nil? ? self.player_piece(inputted_move, current_player) : nil)
       if !move.nil?
-
-        #USE KNIGHT AS MODEL FOR OTHER PIECES
-        #MAKE SURE ALL PIECES ARE UNABLE TO MOVE PAST ANOTHER PIECE (EXCEPT FOR KNIGHT)
-        #ALSO MAKE SURE PIECE CAN ONLY TAKE PIECES OF THE OTHER KIND AND SHOULD NOT BE ABLE
-        #TO MOVE TO THE SAME COORD AS WHERE A PIECE OF THE SAME TYPE ALREADY IS
-
         if piece_at_that_pos?(move)
-          
           piece = board.chess_board[move[0..1]] 
           if piece.valid_move(move[0..1], move[3..-1], board, current_player)
-            
             target_coord = board.chess_board[move[3..-1]]
-            
             current_player = update_user(target_coord, current_player, piece, move)
           else
             puts "Not a valid move for #{piece.name}"  
           end
-          #p piece
-          #check what kind of piece it is
-          #See if the desired move is valid for that piece
         else
           puts "There is no piece at position #{move[0..1]}"
         end
-        
-        
-        
       else 
         puts 'Please try again!'
       end
-
     end
-
   end
   #after everytime someone makes a move, I want to check two things
   # 1. Did the most recent move make the king in check thereby making the move illegal?
