@@ -65,7 +65,7 @@ class Pawn < Piece
     translated_next_to = Piece.translate_to_algebraic([pos_cord[0], orig_coord[1]])
     chess_piece_there = board.chess_board[translated_next_to]
     if chess_piece_there != ' ' && chess_piece_there.name == 'pawn'
-      pos_cord
+      return pos_cord
     end
     []
   end
@@ -77,13 +77,29 @@ class Pawn < Piece
     negative_x = orig_coord[0] - 1
 
     if direction == 1 && orig_coord[1] == 5
-      new_coords += helper_for_passant([positive_x, y], orig_coord, board) if valid_coord?(positive_x, y)
-      new_coords += helper_for_passant([negative_x, y], orig_coord, board) if valid_coord?(negative_x, y)
+
+      if valid_coord?(positive_x, y)
+        potential_move = helper_for_passant([positive_x, y], orig_coord, board)
+        new_coords.push(potential_move) if potential_move != []
+      end
+
+      if valid_coord?(negative_x, y)
+        potential_move = helper_for_passant([negative_x, y], orig_coord, board)
+        new_coords.push(potential_move) if potential_move != []
+      end
+
     elsif direction == -1 && orig_coord[1] == 4
-      new_coords += helper_for_passant([positive_x, y], orig_coord, board) if valid_coord?(positive_x, y)
-      new_coords += helper_for_passant([negative_x, y], orig_coord, board) if valid_coord?(negative_x, y)
+
+      if valid_coord?(positive_x, y)
+        potential_move = helper_for_passant([positive_x, y], orig_coord, board)
+        new_coords.push(potential_move) if potential_move != []
+      end
+
+      if valid_coord?(negative_x, y)
+        potential_move = helper_for_passant([negative_x, y], orig_coord, board)
+        new_coords.push(potential_move) if potential_move != []
+      end
     end
-    
     new_coords
   end
 
