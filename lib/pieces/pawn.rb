@@ -30,8 +30,9 @@ class Pawn < Piece
       self.first_move = false
     end
     pos_moves += diagonal(player.direction, coord, board)
+    pos_moves += empty_diagonal_for_passant(player.direction, coord, board)
 
-    pos_moves
+    pos_moves 
   end
 
   private
@@ -44,26 +45,46 @@ class Pawn < Piece
 
   def diagonal(direction, orig_coord, board, new_coords = [])
 
-    positive_y = orig_coord[1] + (direction * 1)
+    y = orig_coord[1] + (direction * 1)
     positive_x = orig_coord[0] + 1
     negative_x = orig_coord[0] - 1
 
-    if valid_coord?(positive_x, positive_y)
-
-      pos_cord = [positive_x, positive_y]
+    if valid_coord?(positive_x, y)
+      pos_cord = [positive_x, y]
       new_coords.push(pos_cord) if board.chess_board[Piece.translate_to_algebraic(pos_cord)] != ' '
-    
     end
 
-    if valid_coord?(negative_x, positive_y)
-      other_pos_cord = [negative_x, positive_y]  
+    if valid_coord?(negative_x, y)
+      other_pos_cord = [negative_x, y]  
       new_coords.push(other_pos_cord) if board.chess_board[Piece.translate_to_algebraic(other_pos_cord)] != ' '
     end
-
-
     new_coords
+  end
+
+  def helper_for_passant(pos_cord, orig_coord, board)
+    translated_next_to = Piece.translate_to_algebraic([pos_cord[0], orig_coord[1]])
+    chess_piece_there = board.chess_board[translated_next_to]
+    if chess_piece_there != ' ' && chess_piece_there.name == 'pawn'
+      pos_cord
+    end
+    []
+  end
+
+  def empty_diagonal_for_passant(direction, orig_coord, board, new_coords = [])
     
-  
+    y = orig_coord[1] + (direction * 1)
+    positive_x = orig_coord[0] + 1
+    negative_x = orig_coord[0] - 1
+
+    if direction == 1 && orig_coord[1] == 5
+      new_coords += helper_for_passant([positive_x, y], orig_coord, board) if valid_coord?(positive_x, y)
+      new_coords += helper_for_passant([negative_x, y], orig_coord, board) if valid_coord?(negative_x, y)
+    elsif direction == -1 && orig_coord[1] == 4
+      new_coords += helper_for_passant([positive_x, y], orig_coord, board) if valid_coord?(positive_x, y)
+      new_coords += helper_for_passant([negative_x, y], orig_coord, board) if valid_coord?(negative_x, y)
+    end
+    
+    new_coords
   end
 
 end
