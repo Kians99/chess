@@ -3,12 +3,13 @@ require_relative 'piece'
 class Pawn < Piece
 
   attr_reader :name
-  attr_accessor :first_move
+  attr_accessor :first_move, :first
 
   def initialize(color, unicode)
     super(color, unicode)
     @name = 'pawn'
     @first_move = true
+    @first = true
   end
 
   #ADD ABILIRY TO MOVE DIAGNOLALY 
@@ -18,7 +19,19 @@ class Pawn < Piece
     #to_numerical[1] = end coordinate
     to_numerical = super(start_coord, end_coord)
     moves = possible_moves(to_numerical[0], player, board)
+
+    improper_move(moves, to_numerical) if self.first
+
+
     moves.include?(to_numerical[1])
+  end
+
+  def improper_move(moves, to_numerical)
+    if !moves.include?(to_numerical[1])
+      self.first_move = true
+    else 
+      self.first = false
+    end
   end
 
   def possible_moves(coord, player, board, pos_moves = [])
