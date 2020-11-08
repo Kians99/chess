@@ -1,7 +1,7 @@
 require_relative 'board'
 require_relative 'player'
 require 'yaml'
-require 'marhsal'
+#require 'marshal'
 
 class Game
 
@@ -84,6 +84,34 @@ class Game
   def deep_copy(o)
     Marshal.load(Marshal.dump(o))
   end
+
+  def location_of_king(board, player)
+    board.chess_board.each do |cord, piece|
+      return Piece.translate_to_numerical(cord) if piece != ' ' && piece.name == 'king' && piece.color == player.color
+    end
+  end
+  
+
+  def check(board, player, move, piece)
+
+    all_pos_moves = []
+    board.chess_board[move[0..1]] = ' '
+    board.chess_board[move[3..-1]] = piece
+    other_player = self.change_player(player)
+    loc_of_king = location_of_king(board, other_player)
+    p loc_of_king
+    
+
+    board.chess_board.each do |cord, chess_piece|
+
+      if chess_piece != ' ' && chess_piece.color == player.color
+        translated = Piece.translate_to_numerical(cord)
+        all_pos_moves = all_pos_moves + chess_piece.possible_moves(translated, player, board)
+      end
+    end
+
+    p all_pos_moves.include?(loc_of_king)
+  end
   
 
   def passant(target_coord, player, piece, move)
@@ -93,11 +121,19 @@ class Game
     x_orig = starting_position[0]
     loc_of_desired_piece_num = (target_move[0] == (x_orig + 1) ? [x_orig + 1, y_orig] : [x_orig - 1, y_orig])
     loc_of_desired_piece_alg = Piece.translate_to_algebraic(loc_of_desired_piece_num)
+    
+     #does this expose the player's king who is making the move? Be careful for pasant reset.
+    
+    
+    board_deep_copy = self.deep_copy(self.board)
+    self.check(board_deep_copy, player, move, piece)
+    
+    
+    
     change_piece_location(move[0..1], move[3..-1], piece)
     board.chess_board[loc_of_desired_piece_alg] = ' '
 
 
-    #does this expose the player's king who is making the move? Be careful for pasant reset.
 
     
     board.print_board
@@ -131,14 +167,18 @@ class Game
         end
       end
 
-      change_piece_location(move[0..1], move[3..-1], piece)
+      
 
+      board_deep_copy = self.deep_copy(self.board)
+      self.check(board_deep_copy, player, move, piece)
+      
       #Make different functions for check/checkmate/stalemate
       #check for checkmate then check 
       #function that tests to see if king is in check/checkmate
       #function that can reset if the king is in fact check/checkmate
       #does this expose the player's king who is making the move?
 
+      change_piece_location(move[0..1], move[3..-1], piece)
       board.print_board
       approp_color = number_to_color(player)
       print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]}. "
@@ -151,12 +191,15 @@ class Game
     elsif players_piece?(target_coord, player)
 
       return pawn_forward_capture(target_coord, player, piece, move) if piece.name == 'pawn' && move[0..1][0] == move[3..-1][0]
-      change_piece_location(move[0..1], move[3..-1], piece)
+      
+      board_deep_copy = self.deep_copy(self.board)
+      self.check(board_deep_copy, player, move, piece)
+
 
 
       #does this expose the player's king who is making the move?
 
-
+      change_piece_location(move[0..1], move[3..-1], piece)
       board.print_board
       player.add_captured_piece(target_coord.name)
       approp_color = number_to_color(player)
