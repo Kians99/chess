@@ -1,16 +1,19 @@
 require_relative 'board'
 require_relative 'player'
 require 'yaml'
+require 'marhsal'
 
 class Game
 
   attr_reader :board, :player1, :player2
+  attr_accessor :move_number
 
   def initialize
 
     @player1 = Player.new("W", 1, 1)
     @player2 = Player.new("B", 2, -1)
     @board = Board.new
+    @move_number = 0
 
   end
 
@@ -77,36 +80,41 @@ class Game
     player
 
   end
+
+  def deep_copy(o)
+    Marshal.load(Marshal.dump(o))
+  end
   
 
   def passant(target_coord, player, piece, move)
-
     starting_position = Piece.translate_to_numerical(move[0..1])
     target_move = Piece.translate_to_numerical(move[3..-1])
-
     y_orig = starting_position[1]
     x_orig = starting_position[0]
-
     loc_of_desired_piece_num = (target_move[0] == (x_orig + 1) ? [x_orig + 1, y_orig] : [x_orig - 1, y_orig])
-
-
     loc_of_desired_piece_alg = Piece.translate_to_algebraic(loc_of_desired_piece_num)
     change_piece_location(move[0..1], move[3..-1], piece)
     board.chess_board[loc_of_desired_piece_alg] = ' '
+
+
+    #does this expose the player's king who is making the move? Be careful for pasant reset.
+
+    
     board.print_board
     player.add_captured_piece('pawn')
     approp_color = number_to_color(player)
     print "Great! We moved #{approp_color}'s pawn to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s pawn en passe. "
     puts "It is now #{tell_user_whose_turn(player)}'s turn."
-    player.queue_all_moves.push([move[0..1], move[3..-1], piece.name])
+    self.move_number = self.move_number + 1 
+    player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+    p self.move_number
     change_player(player)
   end
 
   def update_user(target_coord, player, piece, move)
     if target_coord == ' '
-
+      
       if piece.name == 'pawn' && move[0..1][0] != move[3..-1][0]
-        #x coord of last move has to equal to x coord of target move[3..-1]
         check_player_hist = change_player(player)
         last_move = check_player_hist.queue_all_moves[-1]
         x_coord_of_last_move = Piece.letter_to_number[last_move[1][0]]
@@ -124,24 +132,39 @@ class Game
       end
 
       change_piece_location(move[0..1], move[3..-1], piece)
+
+      #Make different functions for check/checkmate/stalemate
+      #check for checkmate then check 
+      #function that tests to see if king is in check/checkmate
+      #function that can reset if the king is in fact check/checkmate
+      #does this expose the player's king who is making the move?
+
       board.print_board
       approp_color = number_to_color(player)
       print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]}. "
       puts "It is #{tell_user_whose_turn(player)}'s turn"
-      player.queue_all_moves.push([move[0..1], move[3..-1], piece.name])
+      self.move_number = self.move_number + 1 
+      player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+      p self.move_number
       change_player(player)
 
     elsif players_piece?(target_coord, player)
 
       return pawn_forward_capture(target_coord, player, piece, move) if piece.name == 'pawn' && move[0..1][0] == move[3..-1][0]
-
       change_piece_location(move[0..1], move[3..-1], piece)
+
+
+      #does this expose the player's king who is making the move?
+
+
       board.print_board
       player.add_captured_piece(target_coord.name)
       approp_color = number_to_color(player)
       print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s #{target_coord.name}. "
       puts "It is now #{tell_user_whose_turn(player)}'s turn."
-      player.queue_all_moves.push([move[0..1], move[3..-1], piece.name])
+      self.move_number = self.move_number + 1 
+      player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+      p self.move_number
       change_player(player)
     else
       color = tell_user_whose_turn(player) == "black" ? "white" : "black"
