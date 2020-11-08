@@ -171,6 +171,16 @@ class Game
 
       board_deep_copy = self.deep_copy(self.board)
       self.check(board_deep_copy, player, move, piece)
+      other_player = self.change_player(player)
+
+      if self.check(board_deep_copy, player, move, piece) #theya are in check
+
+      elsif self.check(board_deep_copy, other_player, move, piece) #im in check for making that move
+      
+      else
+
+
+      end
       
       #Make different functions for check/checkmate/stalemate
       #check for checkmate then check 
