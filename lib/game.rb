@@ -81,12 +81,11 @@ class Game
 
   def passant(target_coord, player, piece, move)
 
-    translate_next_to = Piece.translate_to_numerical(move[0..1])
-
+    starting_position = Piece.translate_to_numerical(move[0..1])
     target_move = Piece.translate_to_numerical(move[3..-1])
 
-    y_orig = translate_next_to[1]
-    x_orig = translate_next_to[0]
+    y_orig = starting_position[1]
+    x_orig = starting_position[0]
 
     loc_of_desired_piece_num = (target_move[0] == (x_orig + 1) ? [x_orig + 1, y_orig] : [x_orig - 1, y_orig])
 
@@ -107,16 +106,17 @@ class Game
     if target_coord == ' '
 
       if piece.name == 'pawn' && move[0..1][0] != move[3..-1][0]
-
+        #x coord of last move has to equal to x coord of target move[3..-1]
         check_player_hist = change_player(player)
         last_move = check_player_hist.queue_all_moves[-1]
         x_coord_of_last_move = Piece.letter_to_number[last_move[1][0]]
         x_coord_of_current_pos = Piece.letter_to_number[move[0..1][0]]
+        x_coord_of_target_pos = Piece.letter_to_number[move[3..-1][0]]
         difference = (x_coord_of_last_move - x_coord_of_current_pos).abs
-        if last_move[2] == 'pawn' && difference == 1 && (last_move[0][1].to_i + 2 == last_move[1][1].to_i || last_move[0][1].to_i - 2 == last_move[1][1].to_i)
+        if last_move[2] == 'pawn' && difference == 1 && x_coord_of_last_move == x_coord_of_target_pos && (last_move[0][1].to_i + 2 == last_move[1][1].to_i || last_move[0][1].to_i - 2 == last_move[1][1].to_i)
           return passant(target_coord, player, piece, move)
         else
-          puts "En passat is invalid as #{number_to_color(check_player_hist)} did not just move pawn."
+          puts "En passat is invalid—#{number_to_color(check_player_hist)} did not just move the pawn you are trying to capture."
           approp_color = number_to_color(player)
           puts "It is still #{approp_color}'s turn"
           return player
@@ -182,5 +182,5 @@ class Game
   # 2. If not, did the most recent make the *other* king in check or checkmate?
 end
 
-#game = Game.new
-#game.start_game
+game = Game.new
+game.start_game
