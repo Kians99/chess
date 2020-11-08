@@ -13,9 +13,13 @@ class Bishop < Piece
     
     to_numerical = super(start_coord, end_coord)
     moves = pos_diagonal_moves(to_numerical[0], board)
-    p moves
     moves.include?(to_numerical[1])
     
+  end
+
+  def possible_moves(to_numerical, _player, board, _pos_moves = [])
+    
+    pos_diagonal_moves(to_numerical, board)
   end
 
 end

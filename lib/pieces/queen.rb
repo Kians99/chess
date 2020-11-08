@@ -20,4 +20,12 @@ class Queen < Piece
     
   end
 
+  def possible_moves(to_numerical, _player, board, _pos_moves = [])
+    
+    diagnoal_moves = pos_diagonal_moves(to_numerical, board)
+    vertical_moves = pos_vertical_moves(to_numerical, board, 1) + pos_vertical_moves(to_numerical, board, -1)
+    horizontal_moves = pos_horizontal_moves(to_numerical, board, 1) + pos_horizontal_moves(to_numerical, board, -1)
+    vertical_moves + horizontal_moves + diagnoal_moves
+  end
+
 end

@@ -9,7 +9,7 @@ class Knight < Piece
     @name = 'knight'
   end
 
-  def valid_move(start_coord, end_coord, player)
+  def valid_move(start_coord, end_coord, _board, _player)
     #to_numerical[0] = start coordinate
     #to_numerical[1] = end coordinate
     to_numerical = super(start_coord, end_coord)
@@ -17,7 +17,7 @@ class Knight < Piece
     moves.include?(to_numerical[1])
   end
 
-  def possible_moves(coord, movement = [1,2], pos_moves = [])
+  def possible_moves(coord, player = nil, board = nil, movement = [1,2], pos_moves = [])
 
     positive_y = coord[1] + movement[1]
     negative_y = coord[1] - movement[1]

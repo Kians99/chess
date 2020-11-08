@@ -19,4 +19,15 @@ class Rook < Piece
     
   end
 
+  def possible_moves(to_numerical, _player, board, _pos_moves = [])
+    
+    vertical_moves = pos_vertical_moves(to_numerical, board, 1) + pos_vertical_moves(to_numerical, board, -1)
+    
+    
+    horizontal_moves = pos_horizontal_moves(to_numerical, board, 1) + pos_horizontal_moves(to_numerical, board, -1)
+    
+    
+    vertical_moves + horizontal_moves
+  end
+
 end
