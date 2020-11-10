@@ -90,6 +90,16 @@ class Game
       return Piece.translate_to_numerical(cord) if piece != ' ' && piece.name == 'king' && piece.color == player.color
     end
   end
+
+  def pawn_cleanup(translated, possible_moves)
+    moves = []
+    possible_moves.each do |pawn_move|
+      if pawn_move[0] != translated[0]
+        moves.push(pawn_move)
+      end
+    end
+    moves
+  end
   
 
   def check(board, player, move, piece)
@@ -99,18 +109,57 @@ class Game
     board.chess_board[move[3..-1]] = piece
     other_player = self.change_player(player)
     loc_of_king = location_of_king(board, other_player)
-    p loc_of_king
+    
     
 
     board.chess_board.each do |cord, chess_piece|
 
-      if chess_piece != ' ' && chess_piece.color == player.color
-        translated = Piece.translate_to_numerical(cord)
+      next unless chess_piece != ' ' && chess_piece.color == player.color
+      translated = Piece.translate_to_numerical(cord)
+      if chess_piece.name == 'pawn'
+        pawn_possible_moves = chess_piece.possible_moves(translated, player, board)
+        cleaned_up = pawn_cleanup(translated, pawn_possible_moves)
+        all_pos_moves = all_pos_moves + cleaned_up
+      else
         all_pos_moves = all_pos_moves + chess_piece.possible_moves(translated, player, board)
       end
     end
 
-    p all_pos_moves.include?(loc_of_king)
+    if all_pos_moves.include?(loc_of_king)
+      mate = king_in_trouble(all_pos_moves, loc_of_king, board, player, other_player)
+      mate ? (return 'mate') : (return 'check')
+    else
+      stalemate = king_in_trouble(all_pos_moves, loc_of_king, board, player, other_player)
+      stalemate ? (return 'stale') : (return 'regular')
+    end
+  end
+
+
+  #FIX THIS SHITTTT
+
+  def king_in_trouble(all_pos_moves, loc_of_king, board, player, other_player)
+    puts "WHAT THE HELL IS GOING ON"
+    king_location = Piece.translate_to_algebraic(loc_of_king)
+    king = board.chess_board[king_location]
+    all_pos_king_moves = king.possible_moves(Piece.translate_to_numerical(king_location))
+    p all_pos_king_moves
+    
+    cant_move = all_pos_king_moves.all? do |king_move|
+      p king_move
+      translation = Piece.translate_to_algebraic(king_move)
+      
+      pos_move = board.chess_board[translation]
+      
+      if pos_move == ' ' || pos_move.color != other_player.color
+
+        all_pos_moves.include?(Piece.translate_to_numerical(king_move))
+      end
+
+      
+
+    end
+    cant_move
+
   end
   
 
@@ -122,29 +171,99 @@ class Game
     loc_of_desired_piece_num = (target_move[0] == (x_orig + 1) ? [x_orig + 1, y_orig] : [x_orig - 1, y_orig])
     loc_of_desired_piece_alg = Piece.translate_to_algebraic(loc_of_desired_piece_num)
     
-     #does this expose the player's king who is making the move? Be careful for pasant reset.
     
-    
-    board_deep_copy = self.deep_copy(self.board)
-    self.check(board_deep_copy, player, move, piece)
-    
-    
-    
-    change_piece_location(move[0..1], move[3..-1], piece)
-    board.chess_board[loc_of_desired_piece_alg] = ' '
+
+
+    game_state = get_game_state(self.board, player, move, piece)
+    other_in_check = game_state[0]
+    cur_in_check = game_state[1]
 
 
 
-    
-    board.print_board
-    player.add_captured_piece('pawn')
-    approp_color = number_to_color(player)
-    print "Great! We moved #{approp_color}'s pawn to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s pawn en passe. "
-    puts "It is now #{tell_user_whose_turn(player)}'s turn."
-    self.move_number = self.move_number + 1 
-    player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
-    p self.move_number
-    change_player(player)
+    if other_in_check == 'mate' #they are in check mate
+
+
+
+      change_piece_location(move[0..1], move[3..-1], piece)
+      board.chess_board[loc_of_desired_piece_alg] = ' '
+      board.print_board
+      player.add_captured_piece('pawn')
+      approp_color = number_to_color(player)
+      print "Great! We moved #{approp_color}'s pawn to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s pawn en passe. "
+      print "This has checkmated #{tell_user_whose_turn(player)}. "
+      print "The game is over. #{approp_color} wins!"
+      self.move_number = self.move_number + 1 
+      player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+      return [player, 'mate']
+
+
+
+    elsif other_in_check == 'check' #they are in check
+
+
+      change_piece_location(move[0..1], move[3..-1], piece)
+      board.chess_board[loc_of_desired_piece_alg] = ' '
+      board.print_board
+      player.add_captured_piece('pawn')
+      approp_color = number_to_color(player)
+      print "Great! We moved #{approp_color}'s pawn to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s pawn en passe. "
+      print "This has placed #{tell_user_whose_turn(player)} in check. "
+      puts "It is #{tell_user_whose_turn(player)}'s turn"
+      self.move_number = self.move_number + 1 
+      player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+      return [change_player(player), 'check']
+
+    elsif cur_in_check == 'check' || cur_in_check == 'mate' #im in check for making that move
+      color = number_to_color(player)
+      puts "\n"
+      puts "\n"
+      puts "This move to #{move[3..-1]} would put you (or keep you) in check. It is still #{color}'s turn."
+      [player, 'regular']
+
+    elsif other_in_check == 'stale' 
+
+      change_piece_location(move[0..1], move[3..-1], piece)
+      board.chess_board[loc_of_desired_piece_alg] = ' '
+      board.print_board
+      player.add_captured_piece('pawn')
+      approp_color = number_to_color(player)
+      print "We moved #{approp_color}'s pawn to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s pawn en passe. "
+      print "This has caused a stalemate. "
+      print "The game is over. It is a tie"
+      self.move_number = self.move_number + 1 
+      player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+      return [player, 'stale']
+
+
+
+
+
+    elsif other_in_check == 'regular'
+
+
+      change_piece_location(move[0..1], move[3..-1], piece)
+      board.chess_board[loc_of_desired_piece_alg] = ' '
+      board.print_board
+      player.add_captured_piece('pawn')
+      approp_color = number_to_color(player)
+      print "Great! We moved #{approp_color}'s pawn to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s pawn en passe. "
+      puts "It is #{tell_user_whose_turn(player)}'s turn"
+      self.move_number = self.move_number + 1 
+      player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+      return [change_player(player), 'regular']
+
+    end
+  end
+
+  def get_game_state(board, player, move, piece)
+    board_deep_copy = self.deep_copy(board)
+    other_in_check = self.check(board_deep_copy, player, move, piece)
+
+    chang_player = self.change_player(player)
+    second_deep_copy = self.deep_copy(self.board)
+    cur_in_check = self.check(second_deep_copy, chang_player, move, piece)
+
+    [other_in_check, cur_in_check]
   end
 
   def update_user(target_coord, player, piece, move)
@@ -163,68 +282,183 @@ class Game
           puts "En passat is invalid—#{number_to_color(check_player_hist)} did not just move the pawn you are trying to capture."
           approp_color = number_to_color(player)
           puts "It is still #{approp_color}'s turn"
-          return player
+          return [player, 'regular']
         end
       end
 
+      #HERE WE ARE 
+
+      #check for checkmate first 
       
 
-      board_deep_copy = self.deep_copy(self.board)
-      self.check(board_deep_copy, player, move, piece)
-      other_player = self.change_player(player)
+      game_state = get_game_state(self.board, player, move, piece)
+      other_in_check = game_state[0]
+      cur_in_check = game_state[1]
 
-      if self.check(board_deep_copy, player, move, piece) #theya are in check
+      #HOW ABOUT CHECKMATE
+      #check for checkmate first 
+      #WE ARE NOW RETURNING AN ARRAY EVERYTIME WE RETURN A PLAYER
+      #are they in checkmate?
 
-      elsif self.check(board_deep_copy, other_player, move, piece) #im in check for making that move
+      if other_in_check == 'mate' #they are in check mate
       
-      else
+        change_piece_location(move[0..1], move[3..-1], piece)
+        board.print_board
+        approp_color = number_to_color(player)
+        print "We moved #{approp_color}'s #{piece.name} to #{move[3..-1]}. "
+        print "This has checkmated #{tell_user_whose_turn(player)}. "
+        print "The game is over. #{approp_color} wins!"
+        self.move_number = self.move_number + 1 
+        player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+        return [player, 'mate']
+        
+      elsif other_in_check == 'check' #they are in check
 
+        change_piece_location(move[0..1], move[3..-1], piece)
+        board.print_board
+        approp_color = number_to_color(player)
+        print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]}. "
+        print "This has placed #{tell_user_whose_turn(player)} in check. "
+        puts "It is #{tell_user_whose_turn(player)}'s turn"
+        self.move_number = self.move_number + 1 
+        player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+        [change_player(player), 'check']
+      
+      elsif cur_in_check == 'check' || cur_in_check == 'mate' #im in check for making that move
+
+        color = number_to_color(player)
+        puts "\n"
+        puts "\n"
+        puts "This move to #{move[3..-1]} would put you (or keep you) in check. It is still #{color}'s turn."
+        [player, 'regular']
+
+
+
+      elsif other_in_check == 'stale' 
+
+        change_piece_location(move[0..1], move[3..-1], piece)
+        board.print_board
+        approp_color = number_to_color(player)
+        print "We moved #{approp_color}'s #{piece.name} to #{move[3..-1]}. "
+        print "This has caused a stalemate."
+        print "The game is over. It is a tie"
+        self.move_number = self.move_number + 1 
+        player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+        return [player, 'stale']
+      
+      elsif other_in_check == 'regular'
+
+
+        change_piece_location(move[0..1], move[3..-1], piece)
+        board.print_board
+        approp_color = number_to_color(player)
+        print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]}. "
+        puts "It is #{tell_user_whose_turn(player)}'s turn"
+        self.move_number = self.move_number + 1 
+        player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+        [change_player(player), 'regular']
 
       end
-      
+
       #Make different functions for check/checkmate/stalemate
       #check for checkmate then check 
       #function that tests to see if king is in check/checkmate
       #function that can reset if the king is in fact check/checkmate
       #does this expose the player's king who is making the move?
 
-      change_piece_location(move[0..1], move[3..-1], piece)
-      board.print_board
-      approp_color = number_to_color(player)
-      print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]}. "
-      puts "It is #{tell_user_whose_turn(player)}'s turn"
-      self.move_number = self.move_number + 1 
-      player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
-      p self.move_number
-      change_player(player)
-
     elsif players_piece?(target_coord, player)
 
       return pawn_forward_capture(target_coord, player, piece, move) if piece.name == 'pawn' && move[0..1][0] == move[3..-1][0]
       
-      board_deep_copy = self.deep_copy(self.board)
-      self.check(board_deep_copy, player, move, piece)
+      
+      
+      game_state = get_game_state(self.board, player, move, piece)
+      other_in_check = game_state[0]
+      cur_in_check = game_state[1]
+
+      
 
 
 
-      #does this expose the player's king who is making the move?
 
-      change_piece_location(move[0..1], move[3..-1], piece)
-      board.print_board
-      player.add_captured_piece(target_coord.name)
-      approp_color = number_to_color(player)
-      print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s #{target_coord.name}. "
-      puts "It is now #{tell_user_whose_turn(player)}'s turn."
-      self.move_number = self.move_number + 1 
-      player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
-      p self.move_number
-      change_player(player)
+
+
+
+      if other_in_check == 'mate' #they are in check mate
+
+        change_piece_location(move[0..1], move[3..-1], piece)
+        board.print_board
+        player.add_captured_piece(target_coord.name)
+        approp_color = number_to_color(player)
+        print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s #{target_coord.name}. "
+        print "This has checkmated #{tell_user_whose_turn(player)}. "
+        print "The game is over. #{approp_color} wins!"
+        self.move_number = self.move_number + 1 
+        player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+        return [player, 'mate']
+        
+      elsif other_in_check == 'check' #they are in check
+
+        change_piece_location(move[0..1], move[3..-1], piece)
+        board.print_board
+        player.add_captured_piece(target_coord.name)
+        approp_color = number_to_color(player)
+        print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s #{target_coord.name}. "
+        print "This has placed #{tell_user_whose_turn(player)} in check. "
+        puts "It is #{tell_user_whose_turn(player)}'s turn"
+        self.move_number = self.move_number + 1 
+        player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+        return [change_player(player), 'check']
+        
+      
+      elsif cur_in_check == 'check' || cur_in_check == 'mate' #im in check for making that move
+        color = number_to_color(player)
+        puts "\n"
+        puts "\n"
+        puts "This move to #{move[3..-1]} would put you (or keep you) in check. It is still #{color}'s turn."
+        [player, 'regular']
+
+
+
+      elsif other_in_check == 'stale' 
+
+
+
+
+        change_piece_location(move[0..1], move[3..-1], piece)
+        board.print_board
+        player.add_captured_piece(target_coord.name)
+        approp_color = number_to_color(player)
+        print "We moved #{approp_color}'s #{piece.name} to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s #{target_coord.name}. "
+        print "This has caused a stalemate."
+        print "The game is over. It is a tie"
+        self.move_number = self.move_number + 1 
+        player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+        return [player, 'stale']
+      
+      elsif other_in_check == 'regular'
+
+
+
+        change_piece_location(move[0..1], move[3..-1], piece)
+        board.print_board
+        player.add_captured_piece(target_coord.name)
+        approp_color = number_to_color(player)
+        print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s #{target_coord.name}. "
+        puts "It is #{tell_user_whose_turn(player)}'s turn"
+        self.move_number = self.move_number + 1 
+        player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
+        return [change_player(player), 'regular']
+
+      end
+
+
     else
       color = tell_user_whose_turn(player) == "black" ? "white" : "black"
       puts "\n"
       puts "\n"
       puts "There is a #{color} piece already on #{move[3..-1]}. It is still #{color}'s turn."
-      player
+      [player, 'regular']
     end
   end
 
@@ -232,18 +466,49 @@ class Game
     current_player = self.player1
     puts 'White moves first. Please enter your move:'
     #until a checkmate/stalemate occurs
-    until false
+
+
+
+    #game_status can equal 'mate' 'check' 'stalemate' or 'regular
+    game_status = 'regular'
+
+
+    until game_status == 'mate' || game_status == 'stale'
+      
       inputted_move = make_move(player1)
       move = (!inputted_move.nil? ? self.player_piece(inputted_move, current_player) : nil)
       if !move.nil?
         if piece_at_that_pos?(move)
-          piece = board.chess_board[move[0..1]] 
-          if piece.valid_move(move[0..1], move[3..-1], board, current_player)
+          piece = board.chess_board[move[0..1]]
+          
+          
+
+
+          if piece.valid_move(move[0..1], move[3..-1], board, current_player) && game_status == 'regular'
             target_coord = board.chess_board[move[3..-1]]
-            current_player = update_user(target_coord, current_player, piece, move)
+            player_and_state = update_user(target_coord, current_player, piece, move)
+            current_player = player_and_state[0]
+            game_status = player_and_state[1]
+
+          elsif piece.valid_move(move[0..1], move[3..-1], board, current_player) && game_status == 'check'
+
+            
+
+            target_coord = board.chess_board[move[3..-1]]
+            player_and_state = update_user(target_coord, current_player, piece, move)
+            current_player = player_and_state[0]
+            game_status = player_and_state[1]
+
+            
+
           else
             puts "Not a valid move for #{piece.name}"  
           end
+
+
+
+
+
         else
           puts "There is no piece at position #{move[0..1]}"
         end
