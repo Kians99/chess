@@ -206,6 +206,8 @@ class Game
 
   def stale(all_pos_moves, loc_of_king, board, player, other_player) 
 
+    #if no valid move remaining. NOT HOW YOU HAVE IT PROGRAMMED LMAO
+
     king_location = Piece.translate_to_algebraic(loc_of_king)
     king = board.chess_board[king_location]
     cleaned_moves = cleaned_king_moves(king, loc_of_king, other_player)
@@ -344,7 +346,7 @@ class Game
       approp_color = number_to_color(player)
       print "We moved #{approp_color}'s pawn to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s pawn en passe. "
       print "This has caused a stalemate. "
-      print "The game is over. It is a tie"
+      puts "The game is over. It is a tie"
       self.move_number = self.move_number + 1 
       player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
       return [player, 'stale']
@@ -430,7 +432,7 @@ class Game
         approp_color = number_to_color(player)
         print "We moved #{approp_color}'s #{piece.name} to #{move[3..-1]}. "
         print "This has checkmated #{tell_user_whose_turn(player)}. "
-        print "The game is over. #{approp_color} wins!"
+        puts "The game is over. #{approp_color} wins!"
         self.move_number = self.move_number + 1 
         player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
         return [player, 'mate']
@@ -456,7 +458,7 @@ class Game
         approp_color = number_to_color(player)
         print "We moved #{approp_color}'s #{piece.name} to #{move[3..-1]}. "
         print "This has caused a stalemate."
-        print "The game is over. It is a tie"
+        puts "The game is over. It is a tie"
         self.move_number = self.move_number + 1 
         player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
         return [player, 'stale']
@@ -512,7 +514,7 @@ class Game
         approp_color = number_to_color(player)
         print "Great! We moved #{approp_color}'s #{piece.name} to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s #{target_coord.name}. "
         print "This has checkmated #{tell_user_whose_turn(player)}. "
-        print "The game is over. #{approp_color} wins!"
+        puts "The game is over. #{approp_color} wins!"
         self.move_number = self.move_number + 1 
         player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
         return [player, 'mate']
@@ -543,7 +545,7 @@ class Game
         approp_color = number_to_color(player)
         print "We moved #{approp_color}'s #{piece.name} to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s #{target_coord.name}. "
         print "This has caused a stalemate."
-        print "The game is over. It is a tie"
+        puts "The game is over. It is a tie"
         self.move_number = self.move_number + 1 
         player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
         return [player, 'stale']
