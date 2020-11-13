@@ -126,18 +126,63 @@ class Game
       true
     elsif pieces_threat_king.size == 1
       if !can_we_kill_attacking.include?(pieces_threat_king[0])
-        true 
-      else #we can get the threatening piece unless the piece that attacks is the king 
 
-        king = board.chess_board[loc_of_king]
-        king_possible_moves = king.possible_moves
+        arbitrary_piece = Pawn.new("B", "\u2659")
+        
+        piece_attacking_king = board.chess_board[Piece.translate_to_algebraic(pieces_threat_king[0])]
+        p piece_attacking_king
+        piece_pos_moves = piece_attacking_king.possible_moves(pieces_threat_king[0], player, board)
+        p piece_pos_moves
+        piece_pos_moves.delete(loc_of_king)
+        p piece_pos_moves
+        cant_move_piece_to_block = true
+
+        puts "All possible moves"
+        p can_we_kill_attacking
+
+        king = board.chess_board[Piece.translate_to_algebraic(loc_of_king)] 
+        king_moves = king.possible_moves(loc_of_king, player, board)
+        king_moves.each do |move|
+          can_we_kill_attacking.delete_at(can_we_kill_attacking.find_index(move)) 
+        end
+        
+
+        if piece_pos_moves == []
+          true
+        else
+          piece_pos_moves.each do |move|
+
+            if board.chess_board[Piece.translate_to_algebraic(move)] == ' ' && can_we_kill_attacking.include?(move)
+              
+              board.chess_board[Piece.translate_to_algebraic(move)] = arbitrary_piece
+
+              p move
+
+              if !piece_attacking_king.possible_moves(pieces_threat_king[0], player, board).include?(loc_of_king)
+                board.chess_board[Piece.translate_to_algebraic(move)] = ' '
+                cant_move_piece_to_block = false
+                break
+              end          
+
+              board.chess_board[Piece.translate_to_algebraic(move)] = ' '
+            end
+          end
+        end
+
+        return cant_move_piece_to_block
+    
+      else #we can get the threatening piece unless the piece that attacks is the king and moving the king your still in check
+        p loc_of_king
+        king = board.chess_board[Piece.translate_to_algebraic(loc_of_king)]
+        p king
+        king_possible_moves = king.possible_moves(loc_of_king, player, board)
         the_king_save_itself = king_possible_moves.any? do |king_move|
-          pieces_threat_king.include?(pos_move)
+          pieces_threat_king.include?(king_move)
         end
 
        
 
-        if the_king_save_itself
+        if the_king_save_itself    
 
           can_we_kill_attacking.delete_at(can_we_kill_attacking.find_index(pieces_threat_king[0]))
           if !can_we_kill_attacking.include?(pieces_threat_king[0])
@@ -206,6 +251,8 @@ class Game
 
   def stale(all_pos_moves, loc_of_king, board, player, other_player) 
 
+    #THIS FUNCTION IS ALL WRONG. ALSO FIX STICKY FINGURES. 
+
     #if no valid move remaining. NOT HOW YOU HAVE IT PROGRAMMED LMAO
 
     king_location = Piece.translate_to_algebraic(loc_of_king)
@@ -254,13 +301,13 @@ class Game
     king = board.chess_board[king_location] #reference to other person's king
     cleaned_moves = cleaned_king_moves(king, loc_of_king, other_player) #get possible king moves of other player
 
-    if cleaned_moves != []
     
-      cant_move = cleaned_moves.all? do |king_move|
-        all_pos_moves.include?(king_move)  #are all moves that the other player's king can move places that are threatened by current player
-      end
+    
+    cant_move = cleaned_moves.all? do |king_move|
+      all_pos_moves.include?(king_move)  #are all moves that the other player's king can move places that are threatened by current player
+    end
 
-      cant_move
+    cant_move
 
       #ONLY RETURN CANT_MOVE IN THIS FUNCTION DO NOT THEN CALL MATE
       #we know for a fact if cant_move is false that means that we are not in checkmate. 
@@ -276,9 +323,7 @@ class Game
 
       #end
     
-    else
-      false
-    end
+   
   end
 
 
