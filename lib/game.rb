@@ -104,9 +104,14 @@ class Game
   def all_pieces_attacking_king(board, player, loc_of_king, pieces_attacking_king = [])
     board.chess_board.each do |cord, chess_piece|
       next unless chess_piece != ' ' && chess_piece.color == player.color
+
       translated = Piece.translate_to_numerical(cord)
       if chess_piece.name == 'pawn'
+        first_move = chess_piece.first_move
+        first = chess_piece.first
         pawn_possible_moves = chess_piece.possible_moves(translated, player, board)
+        chess_piece.first_move = first_move
+        chess_piece.first = first
         cleaned_up = pawn_cleanup(translated, pawn_possible_moves)
         pieces_attacking_king.push(translated) if cleaned_up.include?(loc_of_king)
       else
@@ -130,38 +135,65 @@ class Game
         arbitrary_piece = Pawn.new("B", "\u2659")
         
         piece_attacking_king = board.chess_board[Piece.translate_to_algebraic(pieces_threat_king[0])]
-        p piece_attacking_king
-        piece_pos_moves = piece_attacking_king.possible_moves(pieces_threat_king[0], player, board)
-        p piece_pos_moves
-        piece_pos_moves.delete(loc_of_king)
-        p piece_pos_moves
-        cant_move_piece_to_block = true
-
-        puts "All possible moves"
-        p can_we_kill_attacking
-
-        king = board.chess_board[Piece.translate_to_algebraic(loc_of_king)] 
-        king_moves = king.possible_moves(loc_of_king, player, board)
-        king_moves.each do |move|
-          can_we_kill_attacking.delete_at(can_we_kill_attacking.find_index(move)) 
+        piece_pos_moves = []
+        
+        if piece_attacking_king.name == 'pawn'
+          first_move = piece_attacking_king.first_move
+          first = piece_attacking_king.first
+          piece_pos_moves = piece_attacking_king.possible_moves(pieces_threat_king[0], player, board)
+          piece_attacking_king.first_move = first_move
+          piece_attacking_king.first = first
+        else
+          piece_pos_moves = piece_attacking_king.possible_moves(pieces_threat_king[0], player, board)
         end
         
+        piece_pos_moves.delete(loc_of_king)
+        
+        cant_move_piece_to_block = true
+        king = board.chess_board[Piece.translate_to_algebraic(loc_of_king)] 
+        king_moves = king.possible_moves(loc_of_king, player, board)
 
+        moves_to_save_king = all_moves_one_side_can_make_with_pawn(board, other_player)
+
+        king_moves.each do |move|
+          moves_to_save_king.delete_at(moves_to_save_king.find_index(move)) 
+        end
+
+        
+        
         if piece_pos_moves == []
           true
         else
           piece_pos_moves.each do |move|
-
-            if board.chess_board[Piece.translate_to_algebraic(move)] == ' ' && can_we_kill_attacking.include?(move)
+            
+            if board.chess_board[Piece.translate_to_algebraic(move)] == ' ' && moves_to_save_king.include?(move)
               
+              
+
               board.chess_board[Piece.translate_to_algebraic(move)] = arbitrary_piece
 
-              p move
+              possible_attacks = []
 
-              if !piece_attacking_king.possible_moves(pieces_threat_king[0], player, board).include?(loc_of_king)
+              if piece_attacking_king.name == 'pawn'
+                first_move = piece_attacking_king.first_move
+                first = piece_attacking_king.first
+                possible_attacks = piece_attacking_king.possible_moves(pieces_threat_king[0], player, board)
+                piece_attacking_king.first_move = first_move
+                piece_attacking_king.first = first
+              else
+                possible_attacks = piece_attacking_king.possible_moves(pieces_threat_king[0], player, board)
+              end
+
+              if !possible_attacks.include?(loc_of_king)
+
+
+
                 board.chess_board[Piece.translate_to_algebraic(move)] = ' '
                 cant_move_piece_to_block = false
                 break
+
+
+
               end          
 
               board.chess_board[Piece.translate_to_algebraic(move)] = ' '
@@ -172,9 +204,9 @@ class Game
         return cant_move_piece_to_block
     
       else #we can get the threatening piece unless the piece that attacks is the king and moving the king your still in check
-        p loc_of_king
+        
         king = board.chess_board[Piece.translate_to_algebraic(loc_of_king)]
-        p king
+        
         king_possible_moves = king.possible_moves(loc_of_king, player, board)
         the_king_save_itself = king_possible_moves.any? do |king_move|
           pieces_threat_king.include?(king_move)
@@ -212,9 +244,47 @@ class Game
 
       translated = Piece.translate_to_numerical(cord)
       if chess_piece.name == 'pawn'
+
+        
+        first_move = chess_piece.first_move
+        
+        first = chess_piece.first
+        
+
         pawn_possible_moves = chess_piece.possible_moves(translated, player, board)
+        
+        chess_piece.first_move = first_move
+        chess_piece.first = first
+
         cleaned_up = pawn_cleanup(translated, pawn_possible_moves)
         all_moves = all_moves + cleaned_up
+      else
+        all_moves = all_moves + chess_piece.possible_moves(translated, player, board)
+      end
+    end
+    
+    all_moves
+  end
+
+  def all_moves_one_side_can_make_with_pawn(board, player, all_moves = [])
+
+
+    board.chess_board.each do |cord, chess_piece|
+      next unless chess_piece != ' ' && chess_piece.color == player.color
+
+      translated = Piece.translate_to_numerical(cord)
+      if chess_piece.name == 'pawn'
+
+        first_move = chess_piece.first_move
+        first = chess_piece.first
+
+        pawn_possible_moves = chess_piece.possible_moves(translated, player, board)
+        
+        chess_piece.first_move = first_move
+        chess_piece.first = first
+
+        
+        all_moves = all_moves + pawn_possible_moves
       else
         all_moves = all_moves + chess_piece.possible_moves(translated, player, board)
       end
@@ -251,28 +321,11 @@ class Game
 
   def stale(all_pos_moves, loc_of_king, board, player, other_player) 
 
+    return false
+
     #THIS FUNCTION IS ALL WRONG. ALSO FIX STICKY FINGURES. 
 
     #if no valid move remaining. NOT HOW YOU HAVE IT PROGRAMMED LMAO
-
-    king_location = Piece.translate_to_algebraic(loc_of_king)
-    king = board.chess_board[king_location]
-    cleaned_moves = cleaned_king_moves(king, loc_of_king, other_player)
-
-    pieces_threatening_king = []
-
-    cleaned_moves.each do |king_move|
-      pieces_threatening_king = pieces_threatening_king + all_pieces_attacking_king(board, player, king_move)
-    end
-    
-    pieces_threatening_king.uniq!
-    other_player_pos_moves = all_moves_one_side_can_make(board, other_player)
-
-    if pieces_threatening_king.size > 1
-      true
-    elsif pieces_threatening_king.size == 1
-      !other_player_pos_moves.include?(pieces_threatening_king[0])
-    end
   end
   
 
@@ -643,13 +696,13 @@ class Game
           
 
 
-          if piece.valid_move(move[0..1], move[3..-1], board, current_player) && game_status == 'regular'
+          if game_status == 'regular' && piece.valid_move(move[0..1], move[3..-1], board, current_player)
             target_coord = board.chess_board[move[3..-1]]
             player_and_state = update_user(target_coord, current_player, piece, move)
             current_player = player_and_state[0]
             game_status = player_and_state[1]
 
-          elsif piece.valid_move(move[0..1], move[3..-1], board, current_player) && game_status == 'check'
+          elsif game_status == 'check' && piece.valid_move(move[0..1], move[3..-1], board, current_player)
             target_coord = board.chess_board[move[3..-1]]
             player_and_state = update_user(target_coord, current_player, piece, move)
             current_player = player_and_state[0]
