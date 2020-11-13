@@ -77,7 +77,7 @@ class Game
     puts "\n"
     puts "\n"
     puts "The pawn is only able to capture other pieces diaganolly. It is still #{color}'s turn."
-    player
+    [player, 'regular']
 
   end
 
@@ -100,67 +100,186 @@ class Game
     end
     moves
   end
+
+  def all_pieces_attacking_king(board, player, loc_of_king, pieces_attacking_king = [])
+    board.chess_board.each do |cord, chess_piece|
+      next unless chess_piece != ' ' && chess_piece.color == player.color
+      translated = Piece.translate_to_numerical(cord)
+      if chess_piece.name == 'pawn'
+        pawn_possible_moves = chess_piece.possible_moves(translated, player, board)
+        cleaned_up = pawn_cleanup(translated, pawn_possible_moves)
+        pieces_attacking_king.push(translated) if cleaned_up.include?(loc_of_king)
+      else
+        pieces_attacking_king.push(translated) if chess_piece.possible_moves(translated, player, board).include?(loc_of_king)
+      end
+    end
+    pieces_attacking_king
+  end
+
+  def mate(all_pos_moves, loc_of_king, board, player, other_player)
+    pieces_threat_king = all_pieces_attacking_king(board, player, loc_of_king) #give me the coordinates of all the pieces currently threatening loc_of_king
+    can_we_kill_attacking = all_moves_one_side_can_make(board, other_player) #all possible movements that can be made by the king player's pieces 
+    
+    #if each of the possible moves in 'can we kill attacking' if it includes the pieces tha
+
+    if pieces_threat_king.size > 1
+      true
+    elsif pieces_threat_king.size == 1
+      if !can_we_kill_attacking.include?(pieces_threat_king[0])
+        true 
+      else #we can get the threatening piece unless the piece that attacks is the king 
+
+        king = board.chess_board[loc_of_king]
+        king_possible_moves = king.possible_moves
+        the_king_save_itself = king_possible_moves.any? do |king_move|
+          pieces_threat_king.include?(pos_move)
+        end
+
+       
+
+        if the_king_save_itself
+
+          can_we_kill_attacking.delete_at(can_we_kill_attacking.find_index(pieces_threat_king[0]))
+          if !can_we_kill_attacking.include?(pieces_threat_king[0])
+            all_pos_moves.include?(pieces_threat_king[0])
+          else
+            false
+          end
+        else
+          false
+        end
+
+        #below is only true if it is the ONLY PIECE THAT CAN SAVE ITSEFL
+        
+        
+        
+
+        #could my king kill the piece?
+          #If so, will it then be in check? If so, then invalid. If not then valid. 
+          #if not, then definitely false
+      end
+    end
+  end
+
+  def all_moves_one_side_can_make(board, player, all_moves = [])
+    board.chess_board.each do |cord, chess_piece|
+      next unless chess_piece != ' ' && chess_piece.color == player.color
+
+      translated = Piece.translate_to_numerical(cord)
+      if chess_piece.name == 'pawn'
+        pawn_possible_moves = chess_piece.possible_moves(translated, player, board)
+        cleaned_up = pawn_cleanup(translated, pawn_possible_moves)
+        all_moves = all_moves + cleaned_up
+      else
+        all_moves = all_moves + chess_piece.possible_moves(translated, player, board)
+      end
+    end
+    all_moves
+  end
   
 
   def check(board, player, move, piece)
 
     all_pos_moves = []
     board.chess_board[move[0..1]] = ' '
-    board.chess_board[move[3..-1]] = piece
-    other_player = self.change_player(player)
-    loc_of_king = location_of_king(board, other_player)
-    
-    
-
-    board.chess_board.each do |cord, chess_piece|
-
-      next unless chess_piece != ' ' && chess_piece.color == player.color
-      translated = Piece.translate_to_numerical(cord)
-      if chess_piece.name == 'pawn'
-        pawn_possible_moves = chess_piece.possible_moves(translated, player, board)
-        cleaned_up = pawn_cleanup(translated, pawn_possible_moves)
-        all_pos_moves = all_pos_moves + cleaned_up
+    board.chess_board[move[3..-1]] = piece #we make the move the current player is making
+    other_player = self.change_player(player) #we get reference to the other player
+    loc_of_king = location_of_king(board, other_player)    #get location of OTHER person's king
+    all_pos_moves = all_moves_one_side_can_make(board, player) #all possible moves of current player
+    if all_pos_moves.include?(loc_of_king) #does any of the pos moves include the other king? If so in check/checkmate
+      if king_in_trouble(all_pos_moves, loc_of_king, board, player, other_player) #if true king can make no possible move
+        mate(all_pos_moves, loc_of_king, board, player, other_player) ? 'mate' : 'check' #possibly a mate. Above is a req. 
       else
-        all_pos_moves = all_pos_moves + chess_piece.possible_moves(translated, player, board)
+        'check'
       end
-    end
-
-    if all_pos_moves.include?(loc_of_king)
-      mate = king_in_trouble(all_pos_moves, loc_of_king, board, player, other_player)
-      mate ? (return 'mate') : (return 'check')
     else
-      stalemate = king_in_trouble(all_pos_moves, loc_of_king, board, player, other_player)
-      stalemate ? (return 'stale') : (return 'regular')
+      if king_in_trouble(all_pos_moves, loc_of_king, board, player, other_player)
+        stale(all_pos_moves, loc_of_king, board, player, other_player) ? 'stale' : 'regular'
+        #This MAY be a stalemate but we can't be sure
+        #if stalemate then stalemate else 'regular
+      else
+        'regular'
+      end
+      #stalemate ? (return 'stale') : (return 'regular')
     end
   end
 
+  def stale(all_pos_moves, loc_of_king, board, player, other_player) 
 
-  #FIX THIS SHITTTT
-
-  def king_in_trouble(all_pos_moves, loc_of_king, board, player, other_player)
-    puts "WHAT THE HELL IS GOING ON"
     king_location = Piece.translate_to_algebraic(loc_of_king)
     king = board.chess_board[king_location]
-    all_pos_king_moves = king.possible_moves(Piece.translate_to_numerical(king_location))
-    p all_pos_king_moves
-    
-    cant_move = all_pos_king_moves.all? do |king_move|
-      p king_move
-      translation = Piece.translate_to_algebraic(king_move)
-      
-      pos_move = board.chess_board[translation]
-      
-      if pos_move == ' ' || pos_move.color != other_player.color
+    cleaned_moves = cleaned_king_moves(king, loc_of_king, other_player)
 
-        all_pos_moves.include?(Piece.translate_to_numerical(king_move))
+    pieces_threatening_king = []
+
+    cleaned_moves.each do |king_move|
+      pieces_threatening_king = pieces_threatening_king + all_pieces_attacking_king(board, player, king_move)
+    end
+    
+    pieces_threatening_king.uniq!
+    other_player_pos_moves = all_moves_one_side_can_make(board, other_player)
+
+    if pieces_threatening_king.size > 1
+      true
+    elsif pieces_threatening_king.size == 1
+      !other_player_pos_moves.include?(pieces_threatening_king[0])
+    end
+  end
+  
+
+  #FIX THIS SHITTTT
+  #Check out for sticky pawn fingers
+  #Also check out for other pieces being able to move to get rid of the piece(s)
+  #threatening the king piece.
+
+  def cleaned_king_moves(king, loc_of_king, other_player)
+    king_location = Piece.translate_to_algebraic(loc_of_king)
+    all_pos_king_moves = king.possible_moves(Piece.translate_to_numerical(king_location))
+    cleaned_moves = []
+    all_pos_king_moves.each do |k_move|
+      translation = Piece.translate_to_algebraic(k_move)
+      pos_move = board.chess_board[translation]
+      if pos_move == ' ' || pos_move.color != other_player.color
+        cleaned_moves.push(k_move)
+      end
+    end
+    cleaned_moves
+  end
+
+  def king_in_trouble(all_pos_moves, loc_of_king, board, player, other_player)
+    
+    king_location = Piece.translate_to_algebraic(loc_of_king) #location of other person's king
+    king = board.chess_board[king_location] #reference to other person's king
+    cleaned_moves = cleaned_king_moves(king, loc_of_king, other_player) #get possible king moves of other player
+
+    if cleaned_moves != []
+    
+      cant_move = cleaned_moves.all? do |king_move|
+        all_pos_moves.include?(king_move)  #are all moves that the other player's king can move places that are threatened by current player
       end
 
-      
+      cant_move
 
+      #ONLY RETURN CANT_MOVE IN THIS FUNCTION DO NOT THEN CALL MATE
+      #we know for a fact if cant_move is false that means that we are not in checkmate. 
+      #similarily fo cant_move is false we know for a fact we cannot be in stalemate 
+      #if cant_move is true there is still a possibility we are in check NOT checkmate (depends on wether
+      #other pieces can then capture the attacking piece). Similarily possibility we are in regular and not stalemate
+
+      #if !cant_move
+      #  false
+      #else
+
+      #  mate(all_pos_moves, loc_of_king, board, player, other_player)
+
+      #end
+    
+    else
+      false
     end
-    cant_move
-
   end
+
+
   
 
   def passant(target_coord, player, piece, move)
@@ -178,11 +297,14 @@ class Game
     other_in_check = game_state[0]
     cur_in_check = game_state[1]
 
+    if cur_in_check == 'check' || cur_in_check == 'mate' #im in check for making that move
+      color = number_to_color(player)
+      puts "\n"
+      puts "\n"
+      puts "This move to #{move[3..-1]} would put you (or keep you) in check. It is still #{color}'s turn."
+      [player, 'regular']
 
-
-    if other_in_check == 'mate' #they are in check mate
-
-
+    elsif other_in_check == 'mate' #they are in check mate
 
       change_piece_location(move[0..1], move[3..-1], piece)
       board.chess_board[loc_of_desired_piece_alg] = ' '
@@ -191,7 +313,7 @@ class Game
       approp_color = number_to_color(player)
       print "Great! We moved #{approp_color}'s pawn to #{move[3..-1]} capturing #{tell_user_whose_turn(player)}'s pawn en passe. "
       print "This has checkmated #{tell_user_whose_turn(player)}. "
-      print "The game is over. #{approp_color} wins!"
+      puts "The game is over. #{approp_color} wins!\n"
       self.move_number = self.move_number + 1 
       player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
       return [player, 'mate']
@@ -212,13 +334,6 @@ class Game
       self.move_number = self.move_number + 1 
       player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
       return [change_player(player), 'check']
-
-    elsif cur_in_check == 'check' || cur_in_check == 'mate' #im in check for making that move
-      color = number_to_color(player)
-      puts "\n"
-      puts "\n"
-      puts "This move to #{move[3..-1]} would put you (or keep you) in check. It is still #{color}'s turn."
-      [player, 'regular']
 
     elsif other_in_check == 'stale' 
 
@@ -300,7 +415,15 @@ class Game
       #WE ARE NOW RETURNING AN ARRAY EVERYTIME WE RETURN A PLAYER
       #are they in checkmate?
 
-      if other_in_check == 'mate' #they are in check mate
+      if cur_in_check == 'check' || cur_in_check == 'mate' #im in check for making that move
+
+        color = number_to_color(player)
+        puts "\n"
+        puts "\n"
+        puts "This move to #{move[3..-1]} would put you (or keep you) in check. It is still #{color}'s turn."
+        [player, 'regular']
+
+      elsif other_in_check == 'mate' #they are in check mate
       
         change_piece_location(move[0..1], move[3..-1], piece)
         board.print_board
@@ -323,14 +446,6 @@ class Game
         self.move_number = self.move_number + 1 
         player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
         [change_player(player), 'check']
-      
-      elsif cur_in_check == 'check' || cur_in_check == 'mate' #im in check for making that move
-
-        color = number_to_color(player)
-        puts "\n"
-        puts "\n"
-        puts "This move to #{move[3..-1]} would put you (or keep you) in check. It is still #{color}'s turn."
-        [player, 'regular']
 
 
 
@@ -381,10 +496,15 @@ class Game
 
 
 
+      if cur_in_check == 'check' || cur_in_check == 'mate' #im in check for making that move
+        color = number_to_color(player)
+        puts "\n"
+        puts "\n"
+        puts "This move to #{move[3..-1]} would put you (or keep you) in check. It is still #{color}'s turn."
+        [player, 'regular']
 
 
-
-      if other_in_check == 'mate' #they are in check mate
+      elsif other_in_check == 'mate' #they are in check mate
 
         change_piece_location(move[0..1], move[3..-1], piece)
         board.print_board
@@ -409,14 +529,6 @@ class Game
         self.move_number = self.move_number + 1 
         player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
         return [change_player(player), 'check']
-        
-      
-      elsif cur_in_check == 'check' || cur_in_check == 'mate' #im in check for making that move
-        color = number_to_color(player)
-        puts "\n"
-        puts "\n"
-        puts "This move to #{move[3..-1]} would put you (or keep you) in check. It is still #{color}'s turn."
-        [player, 'regular']
 
 
 
@@ -491,9 +603,6 @@ class Game
             game_status = player_and_state[1]
 
           elsif piece.valid_move(move[0..1], move[3..-1], board, current_player) && game_status == 'check'
-
-            
-
             target_coord = board.chess_board[move[3..-1]]
             player_and_state = update_user(target_coord, current_player, piece, move)
             current_player = player_and_state[0]
