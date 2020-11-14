@@ -159,17 +159,11 @@ class Game
           moves_to_save_king.delete_at(moves_to_save_king.find_index(move)) 
         end
 
-        
-        
         if piece_pos_moves == []
           true
         else
           piece_pos_moves.each do |move|
-            
             if board.chess_board[Piece.translate_to_algebraic(move)] == ' ' && moves_to_save_king.include?(move)
-              
-              
-
               board.chess_board[Piece.translate_to_algebraic(move)] = arbitrary_piece
 
               possible_attacks = []
@@ -185,15 +179,9 @@ class Game
               end
 
               if !possible_attacks.include?(loc_of_king)
-
-
-
                 board.chess_board[Piece.translate_to_algebraic(move)] = ' '
                 cant_move_piece_to_block = false
                 break
-
-
-
               end          
 
               board.chess_board[Piece.translate_to_algebraic(move)] = ' '
@@ -211,11 +199,7 @@ class Game
         the_king_save_itself = king_possible_moves.any? do |king_move|
           pieces_threat_king.include?(king_move)
         end
-
-       
-
         if the_king_save_itself    
-
           can_we_kill_attacking.delete_at(can_we_kill_attacking.find_index(pieces_threat_king[0]))
           if !can_we_kill_attacking.include?(pieces_threat_king[0])
             all_pos_moves.include?(pieces_threat_king[0])
@@ -225,15 +209,6 @@ class Game
         else
           false
         end
-
-        #below is only true if it is the ONLY PIECE THAT CAN SAVE ITSEFL
-        
-        
-        
-
-        #could my king kill the piece?
-          #If so, will it then be in check? If so, then invalid. If not then valid. 
-          #if not, then definitely false
       end
     end
   end
@@ -312,6 +287,7 @@ class Game
         stale(all_pos_moves, loc_of_king, board, player, other_player) ? 'stale' : 'regular'
         #This MAY be a stalemate but we can't be sure
         #if stalemate then stalemate else 'regular
+        #we do not need to call king in trouble here. We just need to check stalemate.
       else
         'regular'
       end
@@ -329,10 +305,6 @@ class Game
   end
   
 
-  #FIX THIS SHITTTT
-  #Check out for sticky pawn fingers
-  #Also check out for other pieces being able to move to get rid of the piece(s)
-  #threatening the king piece.
 
   def cleaned_king_moves(king, loc_of_king, other_player)
     king_location = Piece.translate_to_algebraic(loc_of_king)
@@ -355,26 +327,13 @@ class Game
     cleaned_moves = cleaned_king_moves(king, loc_of_king, other_player) #get possible king moves of other player
 
     
-    
+    return true if cleaned_moves == []
+
     cant_move = cleaned_moves.all? do |king_move|
       all_pos_moves.include?(king_move)  #are all moves that the other player's king can move places that are threatened by current player
     end
 
     cant_move
-
-      #ONLY RETURN CANT_MOVE IN THIS FUNCTION DO NOT THEN CALL MATE
-      #we know for a fact if cant_move is false that means that we are not in checkmate. 
-      #similarily fo cant_move is false we know for a fact we cannot be in stalemate 
-      #if cant_move is true there is still a possibility we are in check NOT checkmate (depends on wether
-      #other pieces can then capture the attacking piece). Similarily possibility we are in regular and not stalemate
-
-      #if !cant_move
-      #  false
-      #else
-
-      #  mate(all_pos_moves, loc_of_king, board, player, other_player)
-
-      #end
     
    
   end
@@ -402,7 +361,7 @@ class Game
       puts "\n"
       puts "\n"
       puts "This move to #{move[3..-1]} would put you (or keep you) in check. It is still #{color}'s turn."
-      [player, 'regular']
+      [player, 'check']
 
     elsif other_in_check == 'mate' #they are in check mate
 
@@ -433,7 +392,7 @@ class Game
       puts "It is #{tell_user_whose_turn(player)}'s turn"
       self.move_number = self.move_number + 1 
       player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
-      return [change_player(player), 'check']
+      return [change_player(player), 'check_other']
 
     elsif other_in_check == 'stale' 
 
@@ -521,7 +480,7 @@ class Game
         puts "\n"
         puts "\n"
         puts "This move to #{move[3..-1]} would put you (or keep you) in check. It is still #{color}'s turn."
-        [player, 'regular']
+        [player, 'check']
 
       elsif other_in_check == 'mate' #they are in check mate
       
@@ -545,7 +504,7 @@ class Game
         puts "It is #{tell_user_whose_turn(player)}'s turn"
         self.move_number = self.move_number + 1 
         player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
-        [change_player(player), 'check']
+        [change_player(player), 'check_other']
 
 
 
@@ -601,7 +560,7 @@ class Game
         puts "\n"
         puts "\n"
         puts "This move to #{move[3..-1]} would put you (or keep you) in check. It is still #{color}'s turn."
-        [player, 'regular']
+        [player, 'check']
 
 
       elsif other_in_check == 'mate' #they are in check mate
@@ -628,7 +587,7 @@ class Game
         puts "It is #{tell_user_whose_turn(player)}'s turn"
         self.move_number = self.move_number + 1 
         player.queue_all_moves.push([move[0..1], move[3..-1], piece.name, self.move_number])
-        return [change_player(player), 'check']
+        return [change_player(player), 'check_other']
 
 
 
@@ -702,12 +661,41 @@ class Game
             current_player = player_and_state[0]
             game_status = player_and_state[1]
 
-          elsif game_status == 'check' && piece.valid_move(move[0..1], move[3..-1], board, current_player)
-            target_coord = board.chess_board[move[3..-1]]
-            player_and_state = update_user(target_coord, current_player, piece, move)
-            current_player = player_and_state[0]
-            game_status = player_and_state[1]
+          elsif game_status == 'check' || game_status == 'check_other' && piece.valid_move(move[0..1], move[3..-1], board, current_player)
+            
+            a_pawn = board.chess_board[move[0..1]]
+            puts "HELLO"
+            p a_pawn
+            if a_pawn.name == 'pawn'
+              puts "INSIDE PAWN"
+              target_coord = board.chess_board[move[3..-1]]
+              player_and_state = update_user(target_coord, current_player, piece, move)
+              current_player = player_and_state[0]
+              game_status = player_and_state[1]
 
+              p game_status
+
+              if game_status == 'check'
+                puts "Bugatti"
+                p a_pawn.color
+                p move[0..1][1]
+                if a_pawn.color == "W" && move[0..1][1] == '2'
+                  
+                  a_pawn.first_move = true
+                  a_pawn.first = true
+                elsif a_pawn.color == "B" && move[0..1][1] == '7'
+                  a_pawn.first_move = true
+                  a_pawn.first = true
+                end
+              end
+
+            else
+    
+              target_coord = board.chess_board[move[3..-1]]
+              player_and_state = update_user(target_coord, current_player, piece, move)
+              current_player = player_and_state[0]
+              game_status = player_and_state[1]
+            end
             
 
           else
