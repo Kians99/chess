@@ -222,7 +222,7 @@ class Game
 
         return cant_move_piece_to_block
     
-      else #we can get the threatening piece unless the piece that attacks is the king and moving the king your still in check
+      else #we can get the threatening piece unless the piece moves and king still in check
         
 
         pieces_protecting_king = pieces_protecting_king_from_enemy(board, other_player, pieces_threat_king[0])
@@ -235,7 +235,7 @@ class Game
           translated = Piece.translate_to_algebraic(protect)
           #if we move piece to the threatening piece is the king still in check
           #we make a new board
-
+          
           deep_copy_of_board = self.deep_copy(board)
           piece = deep_copy_of_board.chess_board[translated]
           deep_copy_of_board.chess_board[translated] = ' '
@@ -261,16 +261,22 @@ class Game
 
         
         first_move = chess_piece.first_move
+        p first_move
         
         first = chess_piece.first
+        puts "BEFORE"
         
 
         pawn_possible_moves = chess_piece.possible_moves(translated, player, board)
+        p pawn_possible_moves
         
+        puts "AFTER"
+
         chess_piece.first_move = first_move
         chess_piece.first = first
 
         cleaned_up = pawn_cleanup(translated, pawn_possible_moves)
+        p cleaned_up
         all_moves = all_moves + cleaned_up
       else
         all_moves = all_moves + chess_piece.possible_moves(translated, player, board)
@@ -308,15 +314,21 @@ class Game
   
 
   def check(board, player, move, piece)
-
+    puts "WHAT THE HELL IS GOING ON"
+    p player
     all_pos_moves = []
     board.chess_board[move[0..1]] = ' '
     board.chess_board[move[3..-1]] = piece #we make the move the current player is making
+    p player
     other_player = self.change_player(player) #we get reference to the other player
     loc_of_king = location_of_king(board, other_player)    #get location of OTHER person's king
+    puts "LOC OF OTHER PLAYER"
+    p loc_of_king
     all_pos_moves = all_moves_one_side_can_make(board, player) #all possible moves of current player
+    
+    
     if all_pos_moves.include?(loc_of_king) #does any of the pos moves include the other king? If so in check/checkmate
-      puts "KING IN TROUBLE"
+      
       if p king_in_trouble(all_pos_moves, loc_of_king, board, player, other_player) #if true king can make no possible move
         mate(all_pos_moves, loc_of_king, board, player, other_player) ? 'mate' : 'check' #possibly a mate. Above is a req. 
       else
@@ -348,6 +360,8 @@ class Game
 
 
   def cleaned_king_moves(king, loc_of_king, other_player)
+    puts "LOC of KING"
+    p loc_of_king
     king_location = Piece.translate_to_algebraic(loc_of_king)
     all_pos_king_moves = king.possible_moves(Piece.translate_to_numerical(king_location))
     cleaned_moves = []
@@ -364,15 +378,29 @@ class Game
   def king_in_trouble(all_pos_moves, loc_of_king, board, player, other_player)
     
     king_location = Piece.translate_to_algebraic(loc_of_king) #location of other person's king
+    
     king = board.chess_board[king_location] #reference to other person's king
     cleaned_moves = cleaned_king_moves(king, loc_of_king, other_player) #get possible king moves of other player
-
-    
+    puts "ALL POSSIBLE MOVES"
+    p all_pos_moves
+    puts "CLEANED MOVES"
+    p cleaned_moves
     return true if cleaned_moves == []
 
     cant_move = cleaned_moves.all? do |king_move|
-      all_pos_moves.include?(king_move)  #are all moves that the other player's king can move places that are threatened by current player
+
+      translated = Piece.translate_to_algebraic(king_move)
+      deep_copy_of_board = self.deep_copy(board)
+      king_reference = deep_copy_of_board.chess_board[king_location]
+      deep_copy_of_board.chess_board[king_location] = ' '
+      deep_copy_of_board.chess_board[translated] = king_reference
+      all_moves = all_moves_one_side_can_make(deep_copy_of_board, player)
+      poten_new_loc_of_king = location_of_king(deep_copy_of_board, other_player)
+      all_moves.include?(poten_new_loc_of_king)  #are all moves that the other player's king can move places that are threatened by current player
     end
+
+    puts "END \n"
+    
 
     cant_move
     
@@ -472,6 +500,8 @@ class Game
 
   def get_game_state(board, player, move, piece)
     board_deep_copy = self.deep_copy(board)
+    puts "PLAYER AGAIN"
+    p player
     other_in_check = self.check(board_deep_copy, player, move, piece)
 
     chang_player = self.change_player(player)
@@ -505,7 +535,8 @@ class Game
 
       #check for checkmate first 
       
-
+      puts "WAYY BEFORE"
+      p player
       game_state = get_game_state(self.board, player, move, piece)
       other_in_check = game_state[0]
       cur_in_check = game_state[1]
