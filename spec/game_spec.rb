@@ -94,74 +94,137 @@ describe Game do
       actual = game.piece_at_that_pos?("E6")
       expect(actual).to eql(false)
     end
+  end
 
-    describe '#update_user' do 
-      it 'moves piece to empty spot for white piece' do
-        game = Game.new
-        target_coord = ' '
-        player = game.player1
-        piece =  Knight.new("W", "\u2658")
-        move = "B1 C3"
-        other_player = game.update_user(target_coord, player, piece, move)
-        expect(game.player2).to eql(other_player)
-      end
+  describe '#update_user' do 
+    it 'moves piece to empty spot for white piece' do
+      game = Game.new
+      target_coord = ' '
+      player = game.player1
+      piece =  Knight.new("W", "\u2658")
+      move = "B1 C3"
+      other_player = game.update_user(target_coord, player, piece, move)
 
-      it 'moves piece to empty spot for black piece' do
-        game = Game.new
-        target_coord = ' '
-        player = game.player2
-        piece =  Knight.new("B", "\u265E")
-        move = "B8 C6"
-        other_player = game.update_user(target_coord, player, piece, move)
-        expect(game.player1).to eql(other_player)
-      end
-
-      it 'white captures black piece' do
-        game = Game.new
-        piece = Knight.new("W", "\u2658")
-        game.change_piece_location('B1','D6', piece)
-        target_coord = game.board.chess_board['F7']
-        player = game.player1
-        move = 'D6 F7'
-        other_player = game.update_user(target_coord, player, piece, move)
-        expect(game.player2).to eql(other_player)
-      end
-
-      it 'black captures white piece' do
-        game = Game.new
-        piece =  Knight.new("B", "\u265E")
-        game.change_piece_location('B8','F3', piece)
-        target_coord = game.board.chess_board['G1']
-        player = game.player2
-        move = 'F3 G1'
-        other_player = game.update_user(target_coord, player, piece, move)
-        expect(game.player1).to eql(other_player)
-      end
-
-      it 'white moves to a place with white already there' do
-        game = Game.new 
-        piece = Knight.new("W", "\u2658") 
-        target_coord = game.board.chess_board['D2'] 
-        player = game.player1
-        move = 'B1 D2'
-        other_player = game.update_user(target_coord, player, piece, move)
-        expect(game.player1).to eql(other_player)
-      end
-
-      it 'black moves to a place with black already there' do
-        game = Game.new 
-        piece =  Knight.new("B", "\u265E")
-        target_coord = game.board.chess_board['E7'] 
-        player = game.player2
-        move = 'G8 E7'
-        other_player = game.update_user(target_coord, player, piece, move)
-        expect(game.player2).to eql(other_player)
-      end
       
+      expect(game.player2).to eql(other_player[0])
+    end
+
+    it 'moves piece to empty spot for black piece' do
+      game = Game.new
+      target_coord = ' '
+      player = game.player2
+      piece =  Knight.new("B", "\u265E")
+      move = "B8 C6"
+      other_player = game.update_user(target_coord, player, piece, move)
+      expect(game.player1).to eql(other_player[0])
+    end
+
+    it 'white captures black piece' do
+      game = Game.new
+      piece = Knight.new("W", "\u2658")
+      game.change_piece_location('B1','D6', piece)
+      target_coord = game.board.chess_board['F7']
+      player = game.player1
+      move = 'D6 F7'
+      other_player = game.update_user(target_coord, player, piece, move)
+      expect(game.player2).to eql(other_player[0])
+    end
+
+    it 'black captures white piece' do
+      game = Game.new
+      piece =  Knight.new("B", "\u265E")
+      game.change_piece_location('B8','F3', piece)
+      target_coord = game.board.chess_board['G1']
+      player = game.player2
+      move = 'F3 G1'
+      other_player = game.update_user(target_coord, player, piece, move)
+      expect(game.player1).to eql(other_player[0])
+    end
+
+    it 'white moves to a place with white already there' do
+      game = Game.new 
+      piece = Knight.new("W", "\u2658") 
+      target_coord = game.board.chess_board['D2'] 
+      player = game.player1
+      move = 'B1 D2'
+      other_player = game.update_user(target_coord, player, piece, move)
+      expect(game.player1).to eql(other_player[0])
+    end
+
+    it 'black moves to a place with black already there' do
+      game = Game.new 
+      piece =  Knight.new("B", "\u265E")
+      target_coord = game.board.chess_board['E7'] 
+      player = game.player2
+      move = 'G8 E7'
+      other_player = game.update_user(target_coord, player, piece, move)
+      expect(game.player2).to eql(other_player[0])
+    end
+      
+  end
+
+  describe '#check' do 
+    it 'White moves for regular game state' do
+      game = Game.new
+      piece = Pawn.new("W", "\u2659")
+      #game.board.chess_board['E7'] 
+      game.check(game.board, game.player1, 'A2 A4', piece)
+      expect(game.check(game.board, game.player1, 'A2 A4', piece)).to eql('regular')
+    end
+
+    it 'Black moves for regular game state' do
+
+      game = Game.new
+      piece = Pawn.new("B", "\u2659")
+      game.check(game.board, game.player2, 'C7 C5', piece)
+      expect(game.check(game.board, game.player2, 'C7 C5', piece)).to eql('regular')
+
+    end
+  end
+
+  describe '#update_user' do
+    it 'Returns checkmate fools mate' do 
+      game = Game.new
+      all_moves = ['F2 F3', 'E7 E5', 'G2 G4'] 
+      game.make_all_these_moves(all_moves)
+      target_coord = game.board.chess_board['H4']
+      player = game.player2
+      piece = game.board.chess_board['D8']
+      move = 'D8 H4'
+      puts "\n"
+      puts "\n"
+      puts "Fool's Mate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      expect(game_state).to eql([player, 'mate'])
+    end
+
+    it 'Returns check almost fools mate' do 
+      game = Game.new
+      all_moves = ['F2 F3', 'E7 E5', 'A2 A4'] 
+      game.make_all_these_moves(all_moves)
+      target_coord = game.board.chess_board['H4']
+      player = game.player2
+      piece = game.board.chess_board['D8']
+      move = 'D8 H4'
+      puts "\n"
+      puts "\n"
+      puts "Almost Fool's Mate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      expect(game_state).to eql([game.player1, 'check_other'])
     end
 
   end
 
 
+  #program update_user tests. Lots of them. Look at top ten most common checkmates and
+  #program a test for each one
+  #also get rid of any p or puts
+  #describe update_user
+
 
 end
+
+
+
