@@ -215,6 +215,206 @@ describe Game do
       expect(game_state).to eql([game.player1, 'check_other'])
     end
 
+    it 'Returns checkmate fools mate' do 
+      game = Game.new
+      all_moves = ['E2 E4', 'F7 F6', 'D2 D4', 'G7 G5'] 
+      game.make_all_these_moves(all_moves)
+      target_coord = game.board.chess_board['H5']
+      player = game.player1
+      piece = game.board.chess_board['D1']
+      move = 'D1 H5'
+      puts "\n"
+      puts "\n"
+      puts "Reversed Fool's Mate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'mate'])
+    end
+
+    it 'Returns check almost fools mate' do 
+      game = Game.new
+      all_moves = ['E2 E4', 'F7 F6', 'D2 D4', 'A7 A5']
+      game.make_all_these_moves(all_moves)
+      target_coord = game.board.chess_board['H5']
+      player = game.player1
+      piece = game.board.chess_board['D1']
+      move = 'D1 H5'
+      puts "\n"
+      puts "\n"
+      puts "Almmost reversed Fool's Mate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([game.player2, 'check_other'])
+    end
+
+    it 'Returns checkmate scholars mate' do 
+      game = Game.new
+      all_moves = ['E2 E4', 'E7 E5', 'F1 C4', 'B8 C6', 'D1 H5', 'G8 F6'] 
+      game.make_all_these_moves(all_moves)
+      target_coord = game.board.chess_board['F7']
+      player = game.player1
+      piece = game.board.chess_board['H5']
+      move = 'H5 F7'
+      puts "\n"
+      puts "\n"
+      puts "Scholar's Mate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'mate'])
+    end
+
+    it 'Returns check almost scholars mate' do 
+      game = Game.new
+      all_moves = ['E2 E4', 'E7 E5', 'A2 A4', 'B8 C6', 'D1 H5', 'G8 F6'] 
+      game.make_all_these_moves(all_moves)
+      target_coord = game.board.chess_board['F7']
+      player = game.player1
+      piece = game.board.chess_board['H5']
+      move = 'H5 F7'
+      puts "\n"
+      puts "\n"
+      puts "Almost Scholar's Mate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([game.player2, 'check_other'])
+    end
+
+    it 'Returns checkmate Dutch defense' do 
+      game = Game.new
+      all_moves = ['D2 D4', 'F7 F5', 'C1 G5', 'H7 H6', 'G5 H4', 'G7 G5', 'E2 E4', 'G5 H4']
+      game.make_all_these_moves(all_moves)
+      target_coord = game.board.chess_board['H5']
+      player = game.player1
+      piece = game.board.chess_board['D1']
+      move = 'D1 H5' 
+      puts "\n"
+      puts "\n"
+      puts "Ducth Defense"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'mate'])
+    end
+
+    it 'Returns check almost Dutch defense' do 
+      game = Game.new
+      all_moves = ['D2 D4', 'F7 F5', 'C1 G5', 'H7 H6', 'G5 H4', 'G7 G5', 'E2 E4', 'H8 H7']
+      game.make_all_these_moves(all_moves)
+      target_coord = game.board.chess_board['H5']
+      player = game.player1
+      piece = game.board.chess_board['D1']
+      move = 'D1 H5' 
+      puts "\n"
+      puts "\n"
+      puts "Almost Ducth Defense"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([game.player2, 'check_other'])
+    end
+
+    it 'Returns check almost Dutch defense another variation' do 
+      game = Game.new
+      all_moves = ['D2 D4', 'F7 F5', 'C1 G5', 'H7 H6', 'G5 H4', 'G7 G5', 'E2 E4', 'H8 H7', 'D1 H5', 'H7 F7']
+      game.make_all_these_moves(all_moves)
+      target_coord = game.board.chess_board['F7']
+      player = game.player1
+      piece = game.board.chess_board['H5']
+      move = 'H5 F7'
+      puts "\n"
+      puts "\n"
+      puts "Almost Ducth Defense Another Variation"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([game.player2, 'check_other'])
+    end
+
+    it 'Returns checkmate smothered mate' do 
+      game = Game.new
+      all_moves = ['E2 E4', 'C7 C6', 'D2 D4', 'D7 D5', 'B1 C3', 'D5 E4', 'C3 E4', 'B8 D7', 'D1 E2', 'G8 F6']
+      game.make_all_these_moves(all_moves)
+      target_coord = game.board.chess_board['D6']
+      player = game.player1
+      piece = game.board.chess_board['E4']
+      move = 'E4 D6'
+      puts "\n"
+      puts "\n"
+      puts "smothered mate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'mate'])
+    end
+
+    it 'Returns check almost smothered mate' do 
+      game = Game.new
+      all_moves = ['E2 E4', 'C7 C6', 'D2 D4', 'D7 D5', 'B1 C3', 'D5 E4', 'C3 E4', 'B8 D7', 'D1 D2', 'G8 F6']
+      game.make_all_these_moves(all_moves)
+      target_coord = game.board.chess_board['D6']
+      player = game.player1
+      piece = game.board.chess_board['E4']
+      move = 'E4 D6'
+      puts "\n"
+      puts "\n"
+      puts "smothered mate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([game.player2, 'check_other'])
+    end
+
+    it 'Returns checkmate smothered mate part two' do 
+      game = Game.new
+      all_moves = ['D8 E4']
+      game.board.chess_board['G2'] = ' '
+      game.board.chess_board['G1'] = ' '
+      game.board.chess_board['H1'] = ' '
+      game.make_all_these_moves(all_moves)
+      target_coord = game.board.chess_board['F3']
+      player = game.player2
+      piece = game.board.chess_board['B8']
+      move = 'B8 F3'
+      puts "\n"
+      puts "\n"
+      puts "smothered mate part two"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'mate'])
+    end
+
+    it 'Returns check almost smothered mate part two' do 
+      game = Game.new
+      all_moves = ['B8 D4']
+      game.board.chess_board['G2'] = ' '
+      game.board.chess_board['G1'] = ' '
+      game.board.chess_board['H1'] = ' '
+      game.make_all_these_moves(all_moves)
+      target_coord = game.board.chess_board['E2']
+      player = game.player2
+      piece = game.board.chess_board['D8']
+      move = 'D8 E2'
+      puts "\n"
+      puts "\n"
+      puts "smothered mate almost part two"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([game.player1, 'check_other'])
+    end
+
+
+
+
+    
+
+
+
   end
 
 
