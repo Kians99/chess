@@ -408,11 +408,145 @@ describe Game do
       expect(game_state).to eql([game.player1, 'check_other'])
     end
 
+    it 'Returns checkmate back rank' do
+
+      game = Game.new
+      letters = [*('A'..'H')]
+      numbers = [*('1'..'8')]
+      numbers.reverse.each do |number|
+        letters.each do |letter|
+          coordinates = letter + number
+          game.board.chess_board[coordinates] = ' '
+        end
+      end
+
+      king_one = King.new("B", "\u265A")
+      king_two = King.new("W", "\u2654")
+      rook_one = Rook.new("W", "\u2656")
+      rook_two = Rook.new("W", "\u2656")
+      game.board.chess_board['A6'] = rook_one
+      game.board.chess_board['B7'] = rook_two
+      game.board.chess_board['H8'] = king_one
+      game.board.chess_board['D1'] = king_two
+      target_coord = game.board.chess_board['A8']
+      player = game.player1
+      piece = game.board.chess_board['A6']
+      move = 'A6 A8'
+      puts "\n"
+      puts "\n"
+      puts "back rank mate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'mate'])
+    end
+
+    it 'Returns check back rank' do
+
+      game = Game.new
+      letters = [*('A'..'H')]
+      numbers = [*('1'..'8')]
+      numbers.reverse.each do |number|
+        letters.each do |letter|
+          coordinates = letter + number
+          game.board.chess_board[coordinates] = ' '
+        end
+      end
+
+      king_one = King.new("B", "\u265A")
+      king_two = King.new("W", "\u2654")
+      rook_one = Rook.new("W", "\u2656")
+      rook_two = Rook.new("W", "\u2656")
+      game.board.chess_board['A6'] = rook_one
+      game.board.chess_board['B7'] = rook_two
+      game.board.chess_board['H8'] = king_one
+      game.board.chess_board['D1'] = king_two
+      target_coord = game.board.chess_board['G8']
+      player = game.player1
+      piece = game.board.chess_board['A6']
+      move = 'A6 G8'
+      puts "\n"
+      puts "\n"
+      puts "back rank mate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([game.player2, 'check_other'])
+    end
+
+    it 'Returns check back rank capture' do
+
+      game = Game.new
+      letters = [*('A'..'H')]
+      numbers = [*('1'..'8')]
+      numbers.reverse.each do |number|
+        letters.each do |letter|
+          coordinates = letter + number
+          game.board.chess_board[coordinates] = ' '
+        end
+      end
+
+      king_one = King.new("B", "\u265A")
+      king_two = King.new("W", "\u2654")
+      rook_one = Rook.new("W", "\u2656")
+      rook_two = Rook.new("W", "\u2656")
+      bishop = Bishop.new("B", "\u265D")
+      game.board.chess_board['A6'] = rook_one
+      game.board.chess_board['B7'] = rook_two
+      game.board.chess_board['H8'] = king_one
+      game.board.chess_board['D1'] = king_two
+      game.board.chess_board['G8'] = bishop
+      target_coord = game.board.chess_board['G8']
+      player = game.player1
+      piece = game.board.chess_board['A6']
+      move = 'A6 G8'
+      puts "\n"
+      puts "\n"
+      puts "back rank mate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([game.player2, 'check_other'])
+    end
+
+    it 'Returns checkmate two pawn' do
+
+      game = Game.new
+      letters = [*('A'..'H')]
+      numbers = [*('1'..'8')]
+      numbers.reverse.each do |number|
+        letters.each do |letter|
+          coordinates = letter + number
+          game.board.chess_board[coordinates] = ' '
+        end
+      end
+
+      king_one = King.new("B", "\u265A")
+      king_two = King.new("W", "\u2654")
+      pawn_one = Pawn.new("W", "\u2659")
+      pawn_one.first = false
+      pawn_one.first_move = false
+      pawn_two = Pawn.new("W", "\u2659")
+      pawn_two.first = false
+      pawn_two.first_move = false
 
 
-
-    
-
+      game.board.chess_board['D6'] = pawn_one
+      game.board.chess_board['E8'] = king_one
+      game.board.chess_board['E7'] = pawn_two
+      game.board.chess_board['E6'] = king_two
+      target_coord = game.board.chess_board['D7'] 
+      player = game.player1
+      piece = game.board.chess_board['D6']
+      move = 'D6 D7'
+      puts "\n"
+      puts "\n"
+      puts "back rank mate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'mate'])
+    end
 
 
   end
