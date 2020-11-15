@@ -54,6 +54,13 @@ class Game
     piece.color != player.color
   end
 
+  def make_all_these_moves(all_moves)
+    all_moves.each do |move|
+      piece = board.chess_board[move[0..1]]
+      change_piece_location(move[0..1], move[3..-1], piece)
+    end
+  end
+
   def change_piece_location(start_coord, end_coord, piece)
     board.chess_board[start_coord] = ' '
     board.chess_board[end_coord] = piece
@@ -121,16 +128,40 @@ class Game
     pieces_attacking_king
   end
 
+  def pieces_protecting_king_from_enemy(board, other_player, loc_of_enemy, pieces_protecting_king = [])
+    board.chess_board.each do |cord, chess_piece|
+      next unless chess_piece != ' ' && chess_piece.color == other_player.color
+
+      translated = Piece.translate_to_numerical(cord)
+
+      if chess_piece.name == 'pawn'
+        first_move = chess_piece.first_move
+        first = chess_piece.first
+        pawn_possible_moves = chess_piece.possible_moves(translated, other_player, board)
+        chess_piece.first_move = first_move
+        chess_piece.first = first
+        cleaned_up = pawn_cleanup(translated, pawn_possible_moves)
+        pieces_protecting_king.push(translated) if cleaned_up.include?(loc_of_enemy)
+      else
+        pieces_protecting_king.push(translated) if chess_piece.possible_moves(translated, other_player, board).include?(loc_of_enemy)
+      end
+    end
+    pieces_protecting_king
+  end
+
   def mate(all_pos_moves, loc_of_king, board, player, other_player)
     pieces_threat_king = all_pieces_attacking_king(board, player, loc_of_king) #give me the coordinates of all the pieces currently threatening loc_of_king
+    puts "PIECES GETTING KING"
+    p pieces_threat_king
     can_we_kill_attacking = all_moves_one_side_can_make(board, other_player) #all possible movements that can be made by the king player's pieces 
-    
+    puts "CAN WE KILL"
+    p can_we_kill_attacking
     #if each of the possible moves in 'can we kill attacking' if it includes the pieces tha
 
     if pieces_threat_king.size > 1
       true
     elsif pieces_threat_king.size == 1
-      if !can_we_kill_attacking.include?(pieces_threat_king[0])
+      if p !can_we_kill_attacking.include?(pieces_threat_king[0])
 
         arbitrary_piece = Pawn.new("B", "\u2659")
         
@@ -193,28 +224,36 @@ class Game
     
       else #we can get the threatening piece unless the piece that attacks is the king and moving the king your still in check
         
-        king = board.chess_board[Piece.translate_to_algebraic(loc_of_king)]
+
+        pieces_protecting_king = pieces_protecting_king_from_enemy(board, other_player, pieces_threat_king[0])
         
-        king_possible_moves = king.possible_moves(loc_of_king, player, board)
-        the_king_save_itself = king_possible_moves.any? do |king_move|
-          pieces_threat_king.include?(king_move)
+        puts "THIS IS WHAT WE WANT:"
+        p pieces_protecting_king
+        
+        player_not_safe = pieces_protecting_king.all? do |protect|
+
+          translated = Piece.translate_to_algebraic(protect)
+          #if we move piece to the threatening piece is the king still in check
+          #we make a new board
+
+          deep_copy_of_board = self.deep_copy(board)
+          piece = deep_copy_of_board.chess_board[translated]
+          deep_copy_of_board.chess_board[translated] = ' '
+          deep_copy_of_board.chess_board[Piece.translate_to_algebraic(pieces_threat_king[0])] = piece
+          all_moves = all_moves_one_side_can_make(deep_copy_of_board, player)
+          poten_new_loc_of_king = location_of_king(deep_copy_of_board, other_player)
+          all_moves.include?(poten_new_loc_of_king)
         end
-        if the_king_save_itself    
-          can_we_kill_attacking.delete_at(can_we_kill_attacking.find_index(pieces_threat_king[0]))
-          if !can_we_kill_attacking.include?(pieces_threat_king[0])
-            all_pos_moves.include?(pieces_threat_king[0])
-          else
-            false
-          end
-        else
-          false
-        end
+
+        player_not_safe
+
       end
     end
   end
 
   def all_moves_one_side_can_make(board, player, all_moves = [])
     board.chess_board.each do |cord, chess_piece|
+      
       next unless chess_piece != ' ' && chess_piece.color == player.color
 
       translated = Piece.translate_to_numerical(cord)
@@ -277,12 +316,14 @@ class Game
     loc_of_king = location_of_king(board, other_player)    #get location of OTHER person's king
     all_pos_moves = all_moves_one_side_can_make(board, player) #all possible moves of current player
     if all_pos_moves.include?(loc_of_king) #does any of the pos moves include the other king? If so in check/checkmate
-      if king_in_trouble(all_pos_moves, loc_of_king, board, player, other_player) #if true king can make no possible move
+      puts "KING IN TROUBLE"
+      if p king_in_trouble(all_pos_moves, loc_of_king, board, player, other_player) #if true king can make no possible move
         mate(all_pos_moves, loc_of_king, board, player, other_player) ? 'mate' : 'check' #possibly a mate. Above is a req. 
       else
         'check'
       end
     else
+      
       if king_in_trouble(all_pos_moves, loc_of_king, board, player, other_player)
         stale(all_pos_moves, loc_of_king, board, player, other_player) ? 'stale' : 'regular'
         #This MAY be a stalemate but we can't be sure
@@ -296,7 +337,7 @@ class Game
   end
 
   def stale(all_pos_moves, loc_of_king, board, player, other_player) 
-
+    #iterate through board find pieces of other_player and see if their pos moves w/ pawn are empty (minus king moves)
     return false
 
     #THIS FUNCTION IS ALL WRONG. ALSO FIX STICKY FINGURES. 
@@ -664,23 +705,13 @@ class Game
           elsif game_status == 'check' || game_status == 'check_other' && piece.valid_move(move[0..1], move[3..-1], board, current_player)
             
             a_pawn = board.chess_board[move[0..1]]
-            puts "HELLO"
-            p a_pawn
             if a_pawn.name == 'pawn'
-              puts "INSIDE PAWN"
               target_coord = board.chess_board[move[3..-1]]
               player_and_state = update_user(target_coord, current_player, piece, move)
               current_player = player_and_state[0]
               game_status = player_and_state[1]
-
-              p game_status
-
               if game_status == 'check'
-                puts "Bugatti"
-                p a_pawn.color
-                p move[0..1][1]
                 if a_pawn.color == "W" && move[0..1][1] == '2'
-                  
                   a_pawn.first_move = true
                   a_pawn.first = true
                 elsif a_pawn.color == "B" && move[0..1][1] == '7'
@@ -720,5 +751,5 @@ class Game
   # 2. If not, did the most recent make the *other* king in check or checkmate?
 end
 
-game = Game.new
-game.start_game
+#game = Game.new
+#game.start_game
