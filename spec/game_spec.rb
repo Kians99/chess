@@ -548,6 +548,190 @@ describe Game do
       expect(game_state).to eql([player, 'mate'])
     end
 
+    it 'Returns checkmate back rank two' do
+
+      game = Game.new
+      letters = [*('A'..'H')]
+      numbers = [*('1'..'8')]
+      numbers.reverse.each do |number|
+        letters.each do |letter|
+          coordinates = letter + number
+          game.board.chess_board[coordinates] = ' '
+        end
+      end
+
+      king_one = King.new("B", "\u265A")
+      king_two = King.new("W", "\u2654")
+      pawn_one = Pawn.new("B", "\u265F")
+      pawn_one.first = false
+      pawn_one.first_move = false
+      pawn_two = Pawn.new("B", "\u265F")
+      pawn_two.first = false
+      pawn_two.first_move = false
+      pawn_three = Pawn.new("B", "\u265F")
+      pawn_three.first = false
+      pawn_three.first_move = false
+      rook = Rook.new("W", "\u2656")
+      game.board.chess_board['G7'] = pawn_one
+      game.board.chess_board['F7'] = pawn_two
+      game.board.chess_board['H7'] = pawn_three
+      game.board.chess_board['G8'] = king_one
+      game.board.chess_board['G1'] = king_two
+      game.board.chess_board['A1'] = rook
+      target_coord = game.board.chess_board['A8'] 
+      player = game.player1
+      piece = game.board.chess_board['A1']
+      move = 'A1 A8'
+      puts "\n"
+      puts "\n"
+      puts "back rank mate two"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'mate'])
+    end
+
+
+
+    it 'Returns check back rank two' do
+
+      game = Game.new
+      letters = [*('A'..'H')]
+      numbers = [*('1'..'8')]
+      numbers.reverse.each do |number|
+        letters.each do |letter|
+          coordinates = letter + number
+          game.board.chess_board[coordinates] = ' '
+        end
+      end
+
+      king_one = King.new("B", "\u265A")
+      king_two = King.new("W", "\u2654")
+      pawn_one = Pawn.new("W", "\u2659")
+      pawn_one.first = false
+      pawn_one.first_move = false
+      pawn_two = Pawn.new("W", "\u2659")
+      pawn_two.first = false
+      pawn_two.first_move = false
+      pawn_three = Pawn.new("W", "\u2659")
+      pawn_three.first = false
+      pawn_three.first_move = false
+      rook = Rook.new("W", "\u2656")
+      game.board.chess_board['G7'] = pawn_one
+      game.board.chess_board['F7'] = pawn_two
+      game.board.chess_board['H7'] = pawn_three
+      game.board.chess_board['G8'] = king_one
+      game.board.chess_board['G1'] = king_two
+      game.board.chess_board['A1'] = rook
+      target_coord = game.board.chess_board['A8'] 
+      player = game.player1
+      piece = game.board.chess_board['A1']
+      move = 'A1 A8'
+      puts "\n"
+      puts "\n"
+      puts "back rank mate two"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([game.player2, 'check_other'])
+    end
+
+
+    it 'Returns mate diagonal attack' do
+
+      game = Game.new
+      letters = [*('A'..'H')]
+      numbers = [*('1'..'8')]
+      numbers.reverse.each do |number|
+        letters.each do |letter|
+          coordinates = letter + number
+          game.board.chess_board[coordinates] = ' '
+        end
+      end
+
+      king_one = King.new("B", "\u265A")
+      king_two = King.new("W", "\u2654")
+      pawn_one = Pawn.new("B", "\u265F")
+      pawn_one.first = false
+      pawn_one.first_move = false
+      pawn_two = Pawn.new("B", "\u265F")
+      pawn_two.first = false
+      pawn_two.first_move = false
+      pawn_three = Pawn.new("B", "\u265F")
+      pawn_three.first = false
+      pawn_three.first_move = false
+      rook = Rook.new("B", "\u265C")
+      queen = Queen.new("W", "\u2655")
+      bishop = Bishop.new("W", "\u2657")
+      game.board.chess_board['G7'] = pawn_one
+      game.board.chess_board['F7'] = pawn_two
+      game.board.chess_board['H7'] = pawn_three
+      game.board.chess_board['G8'] = king_one
+      game.board.chess_board['G1'] = king_two
+      game.board.chess_board['F8'] = rook
+      game.board.chess_board['B2'] = queen
+      game.board.chess_board['A1'] = bishop
+      target_coord = game.board.chess_board['G7'] 
+      player = game.player1
+      piece = game.board.chess_board['B2']
+      move = 'B2 G7'
+      puts "\n"
+      puts "\n"
+      puts "diagonal mate final"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'mate'])
+    end
+
+    it 'Returns check diagonal attack' do
+
+      game = Game.new
+      letters = [*('A'..'H')]
+      numbers = [*('1'..'8')]
+      numbers.reverse.each do |number|
+        letters.each do |letter|
+          coordinates = letter + number
+          game.board.chess_board[coordinates] = ' '
+        end
+      end
+
+      king_one = King.new("B", "\u265A")
+      king_two = King.new("W", "\u2654")
+      pawn_one = Pawn.new("B", "\u265F")
+      pawn_one.first = false
+      pawn_one.first_move = false
+      pawn_two = Pawn.new("B", "\u265F")
+      pawn_two.first = false
+      pawn_two.first_move = false
+      pawn_three = Pawn.new("B", "\u265F")
+      pawn_three.first = false
+      pawn_three.first_move = false
+      rook = Rook.new("B", "\u265C")
+      queen = Queen.new("W", "\u2655")
+      
+      game.board.chess_board['G7'] = pawn_one
+      game.board.chess_board['F7'] = pawn_two
+      game.board.chess_board['H7'] = pawn_three
+      game.board.chess_board['G8'] = king_one
+      game.board.chess_board['G1'] = king_two
+      game.board.chess_board['F8'] = rook
+      game.board.chess_board['B2'] = queen
+      
+      target_coord = game.board.chess_board['G7'] 
+      player = game.player1
+      piece = game.board.chess_board['B2']
+      move = 'B2 G7'
+      puts "\n"
+      puts "\n"
+      puts "diagonal check final"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([game.player2, 'check_other'])
+    end
+    
+
 
   end
 
