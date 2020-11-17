@@ -333,12 +333,50 @@ class Game
   end
 
   def stale(all_pos_moves, loc_of_king, board, player, other_player) 
-    #iterate through board find pieces of other_player and see if their pos moves w/ pawn are empty (minus king moves)
-    return false
+    king_location = Piece.translate_to_algebraic(loc_of_king) #location of other person's king
+    king = board.chess_board[king_location] #reference to other person's king
+    cleaned_king_moves = cleaned_king_moves(king, loc_of_king, other_player)
+    all_cleaned_moves = cleaned_all_moves_one_side_can_make_with_pawn(board, other_player, all_moves = [])
+    all_valid_moves = all_cleaned_moves - cleaned_king_moves
+    all_valid_moves == [] 
+  end
 
-    #THIS FUNCTION IS ALL WRONG. ALSO FIX STICKY FINGURES. 
+  def washing_machine(array_of_moves, board, player, chess_piece, cord, cleaned_moves = [])
+    array_of_moves.each do |move|
+      piece = board.chess_board[Piece.translate_to_algebraic(move)]
+      if piece == ' ' || (piece.color != player.color && chess_piece.name != 'pawn')
+        cleaned_moves.push(move)
+      elsif chess_piece.name == 'pawn'
+        translation = Piece.translate_to_numerical(cord)
+        if piece.color != player.color && translation[0] != move[0]
+          cleaned_moves.push(move)
+        end
+      end
+    end
+    cleaned_moves
+  end
 
-    #if no valid move remaining. NOT HOW YOU HAVE IT PROGRAMMED LMAO
+  def cleaned_all_moves_one_side_can_make_with_pawn(board, player, cord, all_moves = [])
+    board.chess_board.each do |cord, chess_piece|
+      next unless chess_piece != ' ' && chess_piece.color == player.color
+
+      translated = Piece.translate_to_numerical(cord)
+      if chess_piece.name == 'pawn'
+
+        first_move = chess_piece.first_move
+        first = chess_piece.first
+
+        pawn_moves_extra = chess_piece.possible_moves(translated, player, board)
+        pawn_possible_moves = washing_machine(pawn_moves_extra, board, player, chess_piece, cord)
+        
+        chess_piece.first_move = first_move
+        chess_piece.first = first
+        all_moves = all_moves + pawn_possible_moves
+      else
+        all_moves = all_moves + washing_machine(chess_piece.possible_moves(translated, player, board), board, player, chess_piece, cord)
+      end
+    end
+    all_moves
   end
   
 
