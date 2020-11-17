@@ -730,6 +730,253 @@ describe Game do
       puts "\n"
       expect(game_state).to eql([game.player2, 'check_other'])
     end
+
+    it 'Returns stalemate' do
+
+      game = Game.new
+      letters = [*('A'..'H')]
+      numbers = [*('1'..'8')]
+      numbers.reverse.each do |number|
+        letters.each do |letter|
+          coordinates = letter + number
+          game.board.chess_board[coordinates] = ' '
+        end
+      end
+
+      king_one = King.new("B", "\u265A")
+      king_two = King.new("W", "\u2654")
+      pawn = Pawn.new("W", "\u2659")
+      pawn.first = false
+      pawn.first_move = false
+      
+      game.board.chess_board['E7'] = pawn
+      game.board.chess_board['E5'] = king_two
+      game.board.chess_board['E8'] = king_one
+      
+      target_coord = game.board.chess_board['E6'] 
+      player = game.player1
+      piece = game.board.chess_board['E5']
+      move = 'E5 E6'
+      puts "\n"
+      puts "\n"
+      puts "stalemate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'stale'])
+    end
+
+    it 'Returns stalemate extra piece' do
+
+      game = Game.new
+      letters = [*('A'..'H')]
+      numbers = [*('1'..'8')]
+      numbers.reverse.each do |number|
+        letters.each do |letter|
+          coordinates = letter + number
+          game.board.chess_board[coordinates] = ' '
+        end
+      end
+
+      king_one = King.new("B", "\u265A")
+      king_two = King.new("W", "\u2654")
+      pawn = Pawn.new("W", "\u2659")
+      
+      pawn.first = false
+      pawn.first_move = false
+      black_pawn = Pawn.new("B", "\u265F")
+      black_pawn.first = false
+      black_pawn.first_move = false
+      pawn_two = Pawn.new("W", "\u2659")
+      pawn_two.first = false
+      pawn_two.first_move = false
+
+      
+      game.board.chess_board['E7'] = pawn
+      game.board.chess_board['E5'] = king_two
+      game.board.chess_board['E8'] = king_one
+      game.board.chess_board['A8'] = black_pawn
+      game.board.chess_board['A7'] = pawn_two
+      
+      target_coord = game.board.chess_board['E6'] 
+      player = game.player1
+      piece = game.board.chess_board['E5']
+      move = 'E5 E6'
+      puts "\n"
+      puts "\n"
+      puts "stalemate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'stale'])
+    end
+
+    it 'Returns stalemate corner' do
+
+      game = Game.new
+      letters = [*('A'..'H')]
+      numbers = [*('1'..'8')]
+      numbers.reverse.each do |number|
+        letters.each do |letter|
+          coordinates = letter + number
+          game.board.chess_board[coordinates] = ' '
+        end
+      end
+
+      king_one = King.new("B", "\u265A")
+      king_two = King.new("W", "\u2654")
+      pawn = Pawn.new("W", "\u2659")
+      pawn.first = false
+      pawn.first_move = false
+
+
+      
+      game.board.chess_board['A7'] = pawn
+      game.board.chess_board['B5'] = king_two
+      game.board.chess_board['A8'] = king_one
+      
+      target_coord = game.board.chess_board['B6'] 
+      player = game.player1
+      piece = game.board.chess_board['B5']
+      move = 'B5 B6'
+      puts "\n"
+      puts "\n"
+      puts "stalemate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'stale'])
+    end
+
+    it 'Returns stalemate bishop' do
+
+      game = Game.new
+      letters = [*('A'..'H')]
+      numbers = [*('1'..'8')]
+      numbers.reverse.each do |number|
+        letters.each do |letter|
+          coordinates = letter + number
+          game.board.chess_board[coordinates] = ' '
+        end
+      end
+
+      king_one = King.new("B", "\u265A")
+      king_two = King.new("W", "\u2654")
+      pawn = Pawn.new("W", "\u2659")
+      pawn.first = false
+      pawn.first_move = false
+      bishop = Bishop.new("W", "\u2657")
+
+
+      game.board.chess_board['H6'] = pawn
+      game.board.chess_board['G6'] = king_two
+      game.board.chess_board['H8'] = king_one
+      game.board.chess_board['E4'] = bishop
+
+
+      
+      target_coord = game.board.chess_board['D5'] 
+      player = game.player1
+      piece = game.board.chess_board['E4']
+      move = 'E4 D5'
+      puts "\n"
+      puts "\n"
+      puts "stalemate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'stale'])
+    end
+
+    it 'Returns stalemate queen' do
+
+      game = Game.new
+      letters = [*('A'..'H')]
+      numbers = [*('1'..'8')]
+      numbers.reverse.each do |number|
+        letters.each do |letter|
+          coordinates = letter + number
+          game.board.chess_board[coordinates] = ' '
+        end
+      end
+
+      king_one = King.new("B", "\u265A")
+      king_two = King.new("W", "\u2654")
+      pawn = Pawn.new("W", "\u2659")
+      pawn.first = false
+      pawn.first_move = false
+      queen = Queen.new("B", "\u265B")
+
+
+      game.board.chess_board['H7'] = pawn
+      game.board.chess_board['H8'] = king_two
+      game.board.chess_board['B3'] = king_one
+      game.board.chess_board['G5'] = queen
+
+
+      
+      target_coord = game.board.chess_board['G6'] 
+      player = game.player2
+      piece = game.board.chess_board['G5']
+      move = 'G5 G6'
+      puts "\n"
+      puts "\n"
+      puts "stalemate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'stale'])
+    end
+
+    it 'Returns stalemate more pawns' do
+
+      game = Game.new
+      letters = [*('A'..'H')]
+      numbers = [*('1'..'8')]
+      numbers.reverse.each do |number|
+        letters.each do |letter|
+          coordinates = letter + number
+          game.board.chess_board[coordinates] = ' '
+        end
+      end
+
+      king_one = King.new("B", "\u265A")
+      king_two = King.new("W", "\u2654")
+      pawn = Pawn.new("W", "\u2659")
+      pawn.first = false
+      pawn.first_move = false
+      pawn2 = Pawn.new("W", "\u2659")
+      pawn2.first = false
+      pawn2.first_move = false
+      black = Pawn.new("B", "\u265F")
+      black.first = false
+      black.first_move = false
+      bishop = Bishop.new("B", "\u265D")
+      
+
+      game.board.chess_board['C3'] = pawn
+      game.board.chess_board['A1'] = king_two
+      game.board.chess_board['D3'] = king_one
+      game.board.chess_board['B2'] = pawn2
+      game.board.chess_board['C4'] = bishop
+      game.board.chess_board['B3'] = black
+
+
+      
+      target_coord = game.board.chess_board['C2'] 
+      player = game.player2
+      piece = game.board.chess_board['D3']
+      move = 'D3 C2'
+      puts "\n"
+      puts "\n"
+      puts "stalemate"
+      game_state = game.update_user(target_coord, player, piece, move)
+      puts "\n"
+      puts "\n"
+      expect(game_state).to eql([player, 'stale'])
+    end
+
+
     
 
 
