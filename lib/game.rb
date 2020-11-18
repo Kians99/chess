@@ -5,8 +5,7 @@ require 'yaml'
 
 class Game
 
-  attr_reader :board, :player1, :player2
-  attr_accessor :move_number
+  attr_accessor :move_number, :board, :player1, :player2, :game_state_and_player
 
   def initialize
 
@@ -14,6 +13,7 @@ class Game
     @player2 = Player.new("B", 2, -1)
     @board = Board.new
     @move_number = 0
+    @game_state_and_player = [] 
 
   end
 
@@ -22,11 +22,42 @@ class Game
     board.print_board
     puts "\nPlease use the standard style of algebraic notation to move a piece. For example, one would type \"B1 C3\" to move the knight currently on \"B1\" to \"C3\". If the same coordinate is entered, like 
 \"A3 A3\" then that input will be considered invalid.\n\n"
+  puts "You can save your current game at any time just by typing \"Save\". Note that this will overwrite 
+your previous save. If you would like to access one of your previously saved games, just type 
+\"Continue\". Have Fun!"
+    puts "\n"
+  
     self.main_game_loop
   end
 
+  def check_serialize(input)
+    if input.casecmp("Save").zero?
+      puts "worked"
+      serialize(self)
+      return true
+    end
+      return false
+  end
+
+  def serialize(game_class)
+    File.open("saved.txt", "w") { |file| file.puts(YAML.dump(game_class)) }
+    return YAML.dump(game_class)
+  end
+
+  def load_saved_game
+    game = YAML.load(File.open("saved.txt", "r") { |file| file.read })
+    self.player1 = game.player1
+    self.player2 = game.player2
+    self.board = game.board
+    self.move_number = game.move_number
+    self.game_state_and_player = game.game_state_and_player
+  end
+
   def make_move(player)
+    
     move = player.make_guess
+    return "save" if move.casecmp("Save").zero?
+    return "continue" if move.casecmp("Continue").zero?
     proper_move_format?(move) ?  move : (print 'Coordinates entered in invalid format. ')
   end
 
@@ -733,60 +764,82 @@ class Game
     until game_status == 'mate' || game_status == 'stale'
       
       inputted_move = make_move(player1)
-      move = (!inputted_move.nil? ? self.player_piece(inputted_move, current_player) : nil)
-      if !move.nil?
-        if piece_at_that_pos?(move)
-          piece = board.chess_board[move[0..1]]
+      abort "You decided to save the game." if self.check_serialize(inputted_move)
+      if !inputted_move.casecmp("Continue").zero?
+        move = (!inputted_move.nil? ? self.player_piece(inputted_move, current_player) : nil)
+        if !move.nil?
+        
+          if piece_at_that_pos?(move)
+            piece = board.chess_board[move[0..1]]
           
           
-
-
-          if game_status == 'regular' && piece.valid_move(move[0..1], move[3..-1], board, current_player)
-            target_coord = board.chess_board[move[3..-1]]
-            player_and_state = update_user(target_coord, current_player, piece, move)
-            current_player = player_and_state[0]
-            game_status = player_and_state[1]
-
-          elsif game_status == 'check' || game_status == 'check_other' && piece.valid_move(move[0..1], move[3..-1], board, current_player)
             
-            a_pawn = board.chess_board[move[0..1]]
-            if a_pawn.name == 'pawn'
+
+            if game_status == 'regular' && piece.valid_move(move[0..1], move[3..-1], board, current_player)
               target_coord = board.chess_board[move[3..-1]]
               player_and_state = update_user(target_coord, current_player, piece, move)
               current_player = player_and_state[0]
               game_status = player_and_state[1]
-              if game_status == 'check'
-                if a_pawn.color == "W" && move[0..1][1] == '2'
-                  a_pawn.first_move = true
-                  a_pawn.first = true
-                elsif a_pawn.color == "B" && move[0..1][1] == '7'
-                  a_pawn.first_move = true
-                  a_pawn.first = true
+              game_state_and_player.push([current_player, game_status])
+
+            elsif game_status == 'check' || game_status == 'check_other' && piece.valid_move(move[0..1], move[3..-1], board, current_player)
+            
+              a_pawn = board.chess_board[move[0..1]]
+              if a_pawn.name == 'pawn'
+                target_coord = board.chess_board[move[3..-1]]
+                player_and_state = update_user(target_coord, current_player, piece, move)
+                current_player = player_and_state[0]
+                game_status = player_and_state[1]
+                game_state_and_player.push([current_player, game_status])
+                if game_status == 'check'
+                  if a_pawn.color == "W" && move[0..1][1] == '2'
+                    a_pawn.first_move = true
+                    a_pawn.first = true
+                  elsif a_pawn.color == "B" && move[0..1][1] == '7'
+                    a_pawn.first_move = true
+                    a_pawn.first = true
+                  end
                 end
+
+              else
+    
+                target_coord = board.chess_board[move[3..-1]]
+                player_and_state = update_user(target_coord, current_player, piece, move)
+                current_player = player_and_state[0]
+                game_status = player_and_state[1]
+                game_state_and_player.push([current_player, game_status])
               end
+            
 
             else
-    
-              target_coord = board.chess_board[move[3..-1]]
-              player_and_state = update_user(target_coord, current_player, piece, move)
-              current_player = player_and_state[0]
-              game_status = player_and_state[1]
+              puts "Not a valid move for #{piece.name}"  
             end
-            
+
+
+
+
 
           else
-            puts "Not a valid move for #{piece.name}"  
+            puts "There is no piece at position #{move[0..1]}"
           end
-
-
-
-
-
-        else
-          puts "There is no piece at position #{move[0..1]}"
+        else 
+          puts 'Please try again!'
         end
-      else 
-        puts 'Please try again!'
+      else
+        load_saved_game
+        board.print_board
+        player_and_state = self.game_state_and_player
+        current_player = player_and_state[-1][0]
+        game_status = player_and_state[-1][1]
+        color = number_to_color(current_player)
+        puts "Game has been restored from last time. It is #{color}'s turn"
+        if game_status == 'check_other'
+          puts "Current State of Game: check"
+        elsif game_status == 'check'
+          puts "Current State of Game: Your last move put you or kept you in check. "
+        else
+          puts "Current State of Game: Regular"
+        end
       end
     end
   end
@@ -796,5 +849,5 @@ class Game
   # 2. If not, did the most recent make the *other* king in check or checkmate?
 end
 
-#game = Game.new
-#game.start_game
+game = Game.new
+game.start_game
