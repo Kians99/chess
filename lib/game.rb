@@ -31,6 +31,7 @@ your previous save. If you would like to access one of your previously saved gam
   end
 
   def check_serialize(input)
+    return input if input.nil?
     if input.casecmp("Save").zero?
       puts "worked"
       serialize(self)
@@ -765,82 +766,84 @@ your previous save. If you would like to access one of your previously saved gam
       
       inputted_move = make_move(player1)
       abort "You decided to save the game." if self.check_serialize(inputted_move)
-      if !inputted_move.casecmp("Continue").zero?
-        move = (!inputted_move.nil? ? self.player_piece(inputted_move, current_player) : nil)
-        if !move.nil?
+      move = (!inputted_move.nil? ? self.player_piece(inputted_move, current_player) : nil)
+      
         
-          if piece_at_that_pos?(move)
-            piece = board.chess_board[move[0..1]]
+        if !move.nil?
+          if !inputted_move.casecmp("Continue").zero?
+            if piece_at_that_pos?(move)
+              piece = board.chess_board[move[0..1]]
           
           
             
 
-            if game_status == 'regular' && piece.valid_move(move[0..1], move[3..-1], board, current_player)
-              target_coord = board.chess_board[move[3..-1]]
-              player_and_state = update_user(target_coord, current_player, piece, move)
-              current_player = player_and_state[0]
-              game_status = player_and_state[1]
-              game_state_and_player.push([current_player, game_status])
-
-            elsif game_status == 'check' || game_status == 'check_other' && piece.valid_move(move[0..1], move[3..-1], board, current_player)
-            
-              a_pawn = board.chess_board[move[0..1]]
-              if a_pawn.name == 'pawn'
+              if game_status == 'regular' && piece.valid_move(move[0..1], move[3..-1], board, current_player)
                 target_coord = board.chess_board[move[3..-1]]
                 player_and_state = update_user(target_coord, current_player, piece, move)
                 current_player = player_and_state[0]
                 game_status = player_and_state[1]
                 game_state_and_player.push([current_player, game_status])
-                if game_status == 'check'
-                  if a_pawn.color == "W" && move[0..1][1] == '2'
-                    a_pawn.first_move = true
-                    a_pawn.first = true
-                  elsif a_pawn.color == "B" && move[0..1][1] == '7'
-                    a_pawn.first_move = true
-                    a_pawn.first = true
+
+              elsif game_status == 'check' || game_status == 'check_other' && piece.valid_move(move[0..1], move[3..-1], board, current_player)
+            
+                a_pawn = board.chess_board[move[0..1]]
+                if a_pawn.name == 'pawn'
+                  target_coord = board.chess_board[move[3..-1]]
+                  player_and_state = update_user(target_coord, current_player, piece, move)
+                  current_player = player_and_state[0]
+                  game_status = player_and_state[1]
+                  game_state_and_player.push([current_player, game_status])
+                  if game_status == 'check'
+                    if a_pawn.color == "W" && move[0..1][1] == '2'
+                      a_pawn.first_move = true
+                      a_pawn.first = true
+                    elsif a_pawn.color == "B" && move[0..1][1] == '7'
+                      a_pawn.first_move = true
+                      a_pawn.first = true
+                    end
                   end
+
+                else
+    
+                  target_coord = board.chess_board[move[3..-1]]
+                  player_and_state = update_user(target_coord, current_player, piece, move)
+                  current_player = player_and_state[0]
+                  game_status = player_and_state[1]
+                  game_state_and_player.push([current_player, game_status])
                 end
+            
 
               else
-    
-                target_coord = board.chess_board[move[3..-1]]
-                player_and_state = update_user(target_coord, current_player, piece, move)
-                current_player = player_and_state[0]
-                game_status = player_and_state[1]
-                game_state_and_player.push([current_player, game_status])
+                puts "Not a valid move for #{piece.name}"  
               end
-            
+
+
+
+
 
             else
-              puts "Not a valid move for #{piece.name}"  
+              puts "There is no piece at position #{move[0..1]}"
             end
-
-
-
-
-
           else
-            puts "There is no piece at position #{move[0..1]}"
+            load_saved_game
+            board.print_board
+            player_and_state = self.game_state_and_player
+            current_player = player_and_state[-1][0]
+            game_status = player_and_state[-1][1]
+            color = number_to_color(current_player)
+            puts "Game has been restored from last time. It is #{color}'s turn"
+            if game_status == 'check_other'
+              puts "Current State of Game: check"
+            elsif game_status == 'check'
+              puts "Current State of Game: Your last move put you or kept you in check. "
+            else
+              puts "Current State of Game: Regular"
+            end
           end
+          
         else 
           puts 'Please try again!'
         end
-      else
-        load_saved_game
-        board.print_board
-        player_and_state = self.game_state_and_player
-        current_player = player_and_state[-1][0]
-        game_status = player_and_state[-1][1]
-        color = number_to_color(current_player)
-        puts "Game has been restored from last time. It is #{color}'s turn"
-        if game_status == 'check_other'
-          puts "Current State of Game: check"
-        elsif game_status == 'check'
-          puts "Current State of Game: Your last move put you or kept you in check. "
-        else
-          puts "Current State of Game: Regular"
-        end
-      end
     end
   end
   #after everytime someone makes a move, I want to check two things
